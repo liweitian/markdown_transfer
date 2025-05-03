@@ -239,6 +239,17 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
               for (var child in node.children!) {
                 if (child is md.Element) {
                   switch (child.tag) {
+                    case 'a':
+                      spans.add(
+                        pw.TextSpan(
+                          text: child.textContent,
+                          style: const pw.TextStyle(
+                            color: PdfColors.blue,
+                            decoration: pw.TextDecoration.underline,
+                          ),
+                        ),
+                      );
+                      break;
                     case 'img':
                       hasImage = true;
                       final imageUrl = child.attributes['src'];
@@ -260,8 +271,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                             ),
                           );
                         } catch (e) {
-                          print('图片加载失败: $imageUrl');
-                          print('错误: $e');
                           pdfWidgets.add(
                             pw.Container(
                               padding: const pw.EdgeInsets.all(8),
@@ -354,8 +363,9 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                 print('代码块语言: ${codeNode.attributes['class']}');
                 print('代码内容: ${codeNode.textContent}');
                 // 获取语言标识
-                String? language = codeNode.attributes['class']?.replaceFirst('language-', '');
-                
+                String? language =
+                    codeNode.attributes['class']?.replaceFirst('language-', '');
+
                 pdfWidgets.add(
                   pw.Container(
                     padding: const pw.EdgeInsets.all(8),
