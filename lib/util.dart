@@ -346,6 +346,69 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
               }
             }
             break;
+          case 'pre':
+            print('发现代码块');
+            if (node.children != null && node.children!.isNotEmpty) {
+              var codeNode = node.children!.first;
+              if (codeNode is md.Element && codeNode.tag == 'code') {
+                print('代码块语言: ${codeNode.attributes['class']}');
+                print('代码内容: ${codeNode.textContent}');
+                // 获取语言标识
+                String? language = codeNode.attributes['class']?.replaceFirst('language-', '');
+                
+                pdfWidgets.add(
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(8),
+                    decoration: pw.BoxDecoration(
+                      color: PdfColors.grey200,
+                      borderRadius: pw.BorderRadius.circular(4),
+                    ),
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        if (language != null)
+                          pw.Container(
+                            padding: const pw.EdgeInsets.only(bottom: 4),
+                            child: pw.Text(
+                              language,
+                              style: pw.TextStyle(
+                                color: PdfColors.grey700,
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        pw.Text(
+                          codeNode.textContent,
+                          style: pw.TextStyle(
+                            font: pw.Font.courier(),
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+                break;
+              }
+            }
+            pdfWidgets.add(
+              pw.Container(
+                padding: const pw.EdgeInsets.all(8),
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey200,
+                  borderRadius: pw.BorderRadius.circular(4),
+                ),
+                child: pw.Text(
+                  node.textContent,
+                  style: pw.TextStyle(
+                    font: pw.Font.courier(),
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            );
+            break;
           default:
             if (node.textContent.trim().isNotEmpty) {
               pdfWidgets.add(
