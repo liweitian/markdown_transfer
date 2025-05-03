@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'dart:io';
 import 'package:markdown/markdown.dart' as md;
 import 'dart:typed_data';
@@ -204,10 +205,34 @@ class _HomePageState extends State<HomePage> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Markdown(
-                  data: _controller.text,
-                  selectable: true,
-                ),
+                child: _controller.text.isEmpty
+                    ? const Center(
+                        child: Text('在此粘贴ChatGPT的Markdown文本...'),
+                      )
+                    : FutureBuilder<Uint8List>(
+                        future: generatePdfBytes(_controller.text),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Text('生成PDF预览失败: ${snapshot.error}'),
+                            );
+                          }
+                          if (!snapshot.hasData) {
+                            return const Center(
+                              child: Text('没有PDF数据'),
+                            );
+                          }
+                          return SfPdfViewer.memory(
+                            snapshot.data!,
+                            enableTextSelection: true,
+                          );
+                        },
+                      ),
               ),
             ),
             Padding(

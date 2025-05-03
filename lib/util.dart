@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:markdown/markdown.dart' as md;
+import 'package:markdown/markdown.dart' show TaskListSyntax;
 import 'dart:typed_data';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
@@ -16,9 +17,27 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
     // 尝试解析Markdown
     final document = md.Document(
       extensionSet: md.ExtensionSet.gitHubWeb,
+      encodeHtml: false,
     );
-    // final String processedText = markdownText.replaceAll('\r\n', '\n');
-    final nodes = document.parseLines(markdownText.split('\n'));
+
+    // 预处理文本，确保换行符统一
+    final processedText =
+        markdownText.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
+
+    // 预处理任务列表
+    final processedLines = processedText.split('\n').map((line) {
+      if (line.trim().startsWith('- [ ]')) {
+        return line.replaceFirst('- [ ]', '* [ ]');
+      } else if (line.trim().startsWith('- [x]') ||
+          line.trim().startsWith('- [X]')) {
+        return line.replaceFirst(RegExp(r'- \[[xX]\]'), '* [x]');
+      }
+      return line;
+    }).join('\n');
+
+    final nodes = document.parseLines(processedLines.split('\n'));
+
+    print('解析后的节点: $nodes');
 
     for (var node in nodes) {
       if (node is md.Element) {
@@ -384,13 +403,96 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
 }
 
 // 添加一个辅助函数来处理列表
-pw.Widget _buildList(md.Element node) {
-  if (node.tag == 'ul' || node.tag == 'ol') {
-    return pw.Bullet(text: node.textContent);
-  } else if (node.tag == 'li') {
-    return pw.Text(node.textContent);
+pw.Widget _buildList(md.Element node, {int level = 0}) {
+  if (node.children == null) {
+    return pw.Container();
   }
-  return pw.Container();
+
+  List<pw.Widget> items = [];
+  int index = 1; // 用于有序列表的编号
+
+  for (var child in node.children!) {
+    if (child is md.Element && child.tag == 'li') {
+      print('列表项属性: ${child.attributes}');
+      print('列表项标签: ${child.tag}');
+      print('列表项内容: ${child.children}');
+      var bulletText = node.tag == 'ol' ? '${index++}.' : '-';
+      var content = <pw.Widget>[];
+
+      // 处理列表项的文本内容和嵌套列表
+      var textContent = '';
+      var nestedItems = <pw.Widget>[];
+      bool isTaskItem = false;
+      bool isChecked = false;
+
+      for (var grandChild in child.children!) {
+        if (grandChild is md.Text) {
+          textContent = grandChild.text.trim();
+        } else if (grandChild is md.Element) {
+          if (grandChild.tag == 'ul' || grandChild.tag == 'ol') {
+            nestedItems.add(_buildList(grandChild, level: level + 1));
+          } else if (grandChild.tag == 'input' &&
+              grandChild.attributes['type'] == 'checkbox') {
+            print('发现checkbox input: ${grandChild.attributes}');
+            isTaskItem = true;
+            isChecked = grandChild.attributes['checked'] == 'true';
+          } else {
+            textContent += grandChild.textContent;
+          }
+        }
+      }
+
+      // 计算当前级别的缩进（每级4个空格）
+      final indentWidth = level * 20.0;
+
+      // 添加主要文本
+      if (textContent.isNotEmpty) {
+        content.add(
+          pw.Row(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.SizedBox(width: indentWidth),
+              // if (!isTaskItem)
+              pw.Container(
+                width: 20,
+                child: pw.Text(bulletText),
+              ),
+
+              pw.Container(
+                width: 20,
+                child: pw.Text(
+                  isChecked ? '[x]' : '[  ]',
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              pw.Expanded(
+                child: pw.Text(
+                  textContent.trim(),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      // 添加嵌套列表
+      content.addAll(nestedItems);
+
+      items.add(
+        pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: content,
+        ),
+      );
+    }
+  }
+
+  return pw.Column(
+    crossAxisAlignment: pw.CrossAxisAlignment.start,
+    children: items,
+  );
 }
 
 // 修改 networkImage 函数
