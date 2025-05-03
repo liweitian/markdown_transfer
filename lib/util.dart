@@ -5,7 +5,6 @@ import 'package:markdown/markdown.dart' as md;
 import 'dart:typed_data';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
-import 'dart:io';
 
 Future<Uint8List> generatePdfBytes(String markdownText) async {
   final pdf = pw.Document();
@@ -77,7 +76,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
             );
             break;
           case 'img':
-            print('处理图片节点');
             final imageUrl = node.attributes['src'];
             if (imageUrl != null) {
               try {
@@ -96,8 +94,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                   ),
                 );
               } catch (e) {
-                print('图片加载失败: $imageUrl');
-                print('错误: $e');
                 // 添加一个占位文本说明图片加载失败
                 pdfWidgets.add(
                   pw.Container(
@@ -220,7 +216,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
             if (node.children != null) {
               final spans = <pw.TextSpan>[];
               bool hasImage = false;
-              
+
               for (var child in node.children!) {
                 if (child is md.Element) {
                   switch (child.tag) {
@@ -234,7 +230,8 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                           pdfWidgets.add(
                             pw.Center(
                               child: pw.Container(
-                                padding: const pw.EdgeInsets.symmetric(vertical: 8),
+                                padding:
+                                    const pw.EdgeInsets.symmetric(vertical: 8),
                                 child: pw.Image(
                                   image,
                                   width: 400,
@@ -285,7 +282,8 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
-                          style: pw.TextStyle(decoration: pw.TextDecoration.lineThrough),
+                          style: pw.TextStyle(
+                              decoration: pw.TextDecoration.lineThrough),
                         ),
                       );
                       break;
@@ -295,7 +293,8 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                           text: child.textContent,
                           style: pw.TextStyle(
                             font: pw.Font.courier(),
-                            background: pw.BoxDecoration(color: PdfColors.grey200),
+                            background:
+                                pw.BoxDecoration(color: PdfColors.grey200),
                           ),
                         ),
                       );
@@ -315,7 +314,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                   );
                 }
               }
-              
+
               // 只有当段落中没有图片时才添加文本内容
               if (!hasImage && spans.isNotEmpty) {
                 pdfWidgets.add(
@@ -367,19 +366,12 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
     );
   }
 
-  // 创建PDF页面
+  // 创建PDF页面，使用MultiPage实现自动分页
   pdf.addPage(
-    pw.Page(
+    pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
-      build: (context) {
-        return pw.Padding(
-          padding: const pw.EdgeInsets.all(20),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: pdfWidgets,
-          ),
-        );
-      },
+      margin: const pw.EdgeInsets.all(20),
+      build: (context) => pdfWidgets,
     ),
   );
 
@@ -407,7 +399,7 @@ Future<pw.ImageProvider> networkImage(String url) async {
     print('开始下载图片: $url');
     final response = await http.get(Uri.parse(url));
     print('HTTP状态码: ${response.statusCode}');
-    
+
     if (response.statusCode == 200) {
       final bytes = response.bodyBytes;
       if (bytes.isEmpty) {
