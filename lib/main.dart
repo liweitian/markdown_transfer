@@ -7,8 +7,6 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'dart:io';
-import 'package:printing/printing.dart';
-import 'dart:typed_data';
 
 // 从 util.dart 导入 getTheme 函数
 import 'package:ai_transfer/util.dart' show generatePdfBytes, getTheme;

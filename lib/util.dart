@@ -2,23 +2,10 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:markdown/markdown.dart' as md;
-import 'dart:typed_data';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
-import 'package:printing/printing.dart';
 
-// 字体缓存
-Map<String, pw.Font?> _fonts = {};
 pw.Font? _emojiFont;
-
-Future<pw.Font> _loadFont(String path) async {
-  if (_fonts[path] != null) return _fonts[path]!;
-  
-  final fontData = await rootBundle.load(path);
-  final font = pw.Font.ttf(fontData);
-  _fonts[path] = font;
-  return font;
-}
 
 Future<pw.Font> _loadEmojiFont() async {
   if (_emojiFont != null) return _emojiFont!;
@@ -72,8 +59,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
     }).join('\n');
 
     final nodes = document.parseLines(processedLines.split('\n'));
-
-    print('解析后的节点: $nodes');
 
     for (var node in nodes) {
       if (node is md.Element) {
@@ -575,7 +560,7 @@ pw.Widget _buildList(md.Element node, {int level = 0}) {
                 width: 20,
                 child: pw.Text(
                   isChecked ? '[x]' : '[  ]',
-                  style: pw.TextStyle(
+                  style: const pw.TextStyle(
                     fontSize: 12,
                   ),
                 ),
