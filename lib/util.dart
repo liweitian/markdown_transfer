@@ -2,7 +2,6 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:markdown/markdown.dart' as md;
-import 'package:markdown/markdown.dart' show TaskListSyntax;
 import 'dart:typed_data';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
@@ -36,8 +35,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
     }).join('\n');
 
     final nodes = document.parseLines(processedLines.split('\n'));
-
-    print('解析后的节点: $nodes');
 
     for (var node in nodes) {
       if (node is md.Element) {
@@ -98,7 +95,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
             final imageUrl = node.attributes['src'];
             if (imageUrl != null) {
               try {
-                print('开始加载图片: $imageUrl');
                 final image = await networkImage(imageUrl);
                 pdfWidgets.add(
                   pw.Center(
@@ -122,7 +118,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       border: pw.Border.all(color: PdfColors.grey),
                     ),
                     child: pw.Text(
-                      '图片加载失败: $imageUrl',
+                      'load Error: $imageUrl',
                       style: const pw.TextStyle(
                         color: PdfColors.red,
                         fontSize: 10,
@@ -255,7 +251,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       final imageUrl = child.attributes['src'];
                       if (imageUrl != null) {
                         try {
-                          print('开始加载图片: $imageUrl');
                           final image = await networkImage(imageUrl);
                           pdfWidgets.add(
                             pw.Center(
@@ -356,12 +351,9 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
             }
             break;
           case 'pre':
-            print('发现代码块');
             if (node.children != null && node.children!.isNotEmpty) {
               var codeNode = node.children!.first;
               if (codeNode is md.Element && codeNode.tag == 'code') {
-                print('代码块语言: ${codeNode.attributes['class']}');
-                print('代码内容: ${codeNode.textContent}');
                 // 获取语言标识
                 String? language =
                     codeNode.attributes['class']?.replaceFirst('language-', '');
@@ -435,8 +427,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
       }
     }
   } catch (e) {
-    // 如果Markdown解析失败，使用普通文本
-    print('Markdown解析失败: $e');
     pdfWidgets.add(
       pw.Container(
         child: pw.Text(
@@ -448,7 +438,6 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
 
   // 如果没有内容，添加原始文本
   if (pdfWidgets.isEmpty) {
-    print('没有解析出任何内容，使用原始文本');
     pdfWidgets.add(
       pw.Container(
         child: pw.Text(
@@ -467,10 +456,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
     ),
   );
 
-  // 保存PDF
-  print('开始保存PDF');
   final Uint8List pdfBytes = await pdf.save();
-  print('PDF保存成功');
 
   return pdfBytes;
 }
@@ -495,7 +481,6 @@ pw.Widget _buildList(md.Element node, {int level = 0}) {
       // 处理列表项的文本内容和嵌套列表
       var textContent = '';
       var nestedItems = <pw.Widget>[];
-      bool isTaskItem = false;
       bool isChecked = false;
 
       for (var grandChild in child.children!) {
@@ -506,8 +491,6 @@ pw.Widget _buildList(md.Element node, {int level = 0}) {
             nestedItems.add(_buildList(grandChild, level: level + 1));
           } else if (grandChild.tag == 'input' &&
               grandChild.attributes['type'] == 'checkbox') {
-            print('发现checkbox input: ${grandChild.attributes}');
-            isTaskItem = true;
             isChecked = grandChild.attributes['checked'] == 'true';
           } else {
             textContent += grandChild.textContent;
@@ -571,23 +554,18 @@ pw.Widget _buildList(md.Element node, {int level = 0}) {
 // 修改 networkImage 函数
 Future<pw.ImageProvider> networkImage(String url) async {
   try {
-    print('开始下载图片: $url');
     final response = await http.get(Uri.parse(url));
-    print('HTTP状态码: ${response.statusCode}');
 
     if (response.statusCode == 200) {
       final bytes = response.bodyBytes;
       if (bytes.isEmpty) {
         throw Exception('图片数据为空');
       }
-      print('图片大小: ${bytes.length} bytes');
       return pw.MemoryImage(bytes);
     } else {
       throw Exception('图片下载失败: HTTP ${response.statusCode}');
     }
   } catch (e) {
-    print('网络图片加载错误: $url');
-    print('错误详情: $e');
     rethrow;
   }
 }
