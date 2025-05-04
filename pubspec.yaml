@@ -39,6 +39,8 @@ dependencies:
   flutter_markdown: ^0.7.0
   syncfusion_flutter_pdfviewer: ^24.2.9
   html: ^0.15.4
+  google_fonts: ^6.1.0
+  printing: ^5.12.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -100,6 +102,6 @@ flutter:
     - assets/fonts/
 
   fonts:
-    - family: NotoSansCJKsc
+    - family: NotoColorEmoji
       fonts:
-        - asset: assets/fonts/NotoSansCJKsc-Regular.otf
+        - asset: assets/fonts/NotoColorEmoji.ttf

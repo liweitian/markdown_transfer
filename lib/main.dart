@@ -1,16 +1,17 @@
 import 'package:ai_transfer/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:share_plus/share_plus.dart';
 import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'dart:io';
-import 'package:markdown/markdown.dart' as md;
+import 'package:printing/printing.dart';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
+
+// 从 util.dart 导入 getTheme 函数
+import 'package:ai_transfer/util.dart' show generatePdfBytes, getTheme;
 
 void main() {
   runApp(const MyApp());
@@ -95,88 +96,57 @@ class _HomePageState extends State<HomePage> {
 
   void _test() async {
     try {
-      setState(() {
-        _isGenerating = true;
-      });
-
-      print('开始测试图片加载...');
       final pdf = pw.Document();
-
-      print('开始加载网络图片...');
-      final imageUrl =
-          "https://nexy-sg.oss-ap-southeast-1.aliyuncs.com/img/2e4360b0-2642-11f0-83a5-e314b62e961a.png";
-      try {
-        final image = await networkImage(imageUrl);
-        print('图片加载成功，开始生成PDF页面...');
-
-        pdf.addPage(
-          pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (context) {
-              return pw.Center(
-                child: pw.Image(image),
-              );
-            },
-          ),
-        );
-
-        print('PDF页面生成完成');
-      } catch (e) {
-        print('图片处理失败: $e');
-        pdf.addPage(
-          pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (context) {
-              return pw.Center(
-                child: pw.Container(
-                  padding: const pw.EdgeInsets.all(8),
-                  decoration: pw.BoxDecoration(
-                    color: PdfColors.grey200,
-                    border: pw.Border.all(color: PdfColors.grey),
-                  ),
-                  child: pw.Text(
-                    '图片加载失败: $imageUrl\n错误: $e',
-                    style: const pw.TextStyle(
-                      color: PdfColors.red,
-                      fontSize: 10,
-                    ),
+      final theme = await getTheme();
+      
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          theme: theme,
+          build: (pw.Context context) {
+            return pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              children: [
+                // 只使用基础字体
+                pw.Text(
+                  'Hello World (basic font)',
+                  style: const pw.TextStyle(
+                    fontSize: 25,
                   ),
                 ),
-              );
-            },
-          ),
-        );
-      }
+                pw.SizedBox(height: 20),
+                // emoji 测试
+                pw.Text(
+                  '🐒 💁 👌 🎍 😍 🦊 👨 (pure emoji)',
+                  style: const pw.TextStyle(
+                    fontSize: 25,
+                  ),
+                ),
+                pw.SizedBox(height: 20),
+                // 混合文本测试
+                pw.Text(
+                  'Hello 🐒 World (mixed)',
+                  style: const pw.TextStyle(
+                    fontSize: 25,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
 
-      print('保存PDF...');
-      final Uint8List pdfBytes = await pdf.save();
-
-      print('写入文件...');
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/document.pdf');
-      await file.writeAsBytes(pdfBytes);
-
-      print('分享文件...');
+      await file.writeAsBytes(await pdf.save());
       if (mounted) {
         await Share.shareXFiles(
           [XFile(file.path)],
           text: 'AI Transfer生成的PDF文档',
         );
       }
-      print('测试完成');
     } catch (e) {
-      print('测试过程中出错: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('测试失败: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
+      print('PDF生成错误: ${e.toString()}');
     }
   }
 
@@ -212,7 +182,8 @@ class _HomePageState extends State<HomePage> {
                     : FutureBuilder<Uint8List>(
                         future: generatePdfBytes(_controller.text),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const Center(
                               child: CircularProgressIndicator(),
                             );

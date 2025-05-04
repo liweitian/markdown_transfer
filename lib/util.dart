@@ -5,10 +5,47 @@ import 'package:markdown/markdown.dart' as md;
 import 'dart:typed_data';
 import 'package:html/parser.dart' as html_parser;
 import 'package:http/http.dart' as http;
+import 'package:printing/printing.dart';
+
+// 字体缓存
+Map<String, pw.Font?> _fonts = {};
+pw.Font? _emojiFont;
+
+Future<pw.Font> _loadFont(String path) async {
+  if (_fonts[path] != null) return _fonts[path]!;
+  
+  final fontData = await rootBundle.load(path);
+  final font = pw.Font.ttf(fontData);
+  _fonts[path] = font;
+  return font;
+}
+
+Future<pw.Font> _loadEmojiFont() async {
+  if (_emojiFont != null) return _emojiFont!;
+  final fontData = await rootBundle.load('assets/fonts/NotoColorEmoji.ttf');
+  _emojiFont = pw.Font.ttf(fontData);
+  return _emojiFont!;
+}
+
+Future<pw.ThemeData> getTheme() async {
+  final baseFont = pw.Font.helvetica();
+  final emojiFont = await _loadEmojiFont();
+  
+  return pw.ThemeData(
+    defaultTextStyle: pw.TextStyle(
+      font: baseFont,
+      fontSize: 11,
+      fontFallback: [emojiFont],
+    ),
+  );
+}
 
 Future<Uint8List> generatePdfBytes(String markdownText) async {
   final pdf = pw.Document();
-
+  
+  // 加载主题（包含字体设置）
+  final theme = await getTheme();
+  
   // 准备内容
   List<pw.Widget> pdfWidgets = [];
 
@@ -36,6 +73,8 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
 
     final nodes = document.parseLines(processedLines.split('\n'));
 
+    print('解析后的节点: $nodes');
+
     for (var node in nodes) {
       if (node is md.Element) {
         switch (node.tag) {
@@ -44,7 +83,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
               pw.Container(
                 child: pw.Text(
                   node.textContent,
-                  style: pw.TextStyle(
+                  style: theme.defaultTextStyle.copyWith(
                     fontSize: 24,
                     fontWeight: pw.FontWeight.bold,
                   ),
@@ -57,7 +96,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
               pw.Container(
                 child: pw.Text(
                   node.textContent,
-                  style: pw.TextStyle(
+                  style: theme.defaultTextStyle.copyWith(
                     fontSize: 20,
                     fontWeight: pw.FontWeight.bold,
                   ),
@@ -70,7 +109,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
               pw.Container(
                 child: pw.Text(
                   node.textContent,
-                  style: pw.TextStyle(
+                  style: theme.defaultTextStyle.copyWith(
                     fontSize: 18,
                     fontWeight: pw.FontWeight.bold,
                   ),
@@ -239,7 +278,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
-                          style: const pw.TextStyle(
+                          style: theme.defaultTextStyle.copyWith(
                             color: PdfColors.blue,
                             decoration: pw.TextDecoration.underline,
                           ),
@@ -251,12 +290,12 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       final imageUrl = child.attributes['src'];
                       if (imageUrl != null) {
                         try {
+                          print('开始加载图片: $imageUrl');
                           final image = await networkImage(imageUrl);
                           pdfWidgets.add(
                             pw.Center(
                               child: pw.Container(
-                                padding:
-                                    const pw.EdgeInsets.symmetric(vertical: 8),
+                                padding: const pw.EdgeInsets.symmetric(vertical: 8),
                                 child: pw.Image(
                                   image,
                                   width: 400,
@@ -274,8 +313,8 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                                 border: pw.Border.all(color: PdfColors.grey),
                               ),
                               child: pw.Text(
-                                '图片加载失败: $imageUrl',
-                                style: pw.TextStyle(
+                                'load error: $imageUrl',
+                                style: theme.defaultTextStyle.copyWith(
                                   color: PdfColors.red,
                                   fontSize: 10,
                                 ),
@@ -289,7 +328,9 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
-                          style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                          style: theme.defaultTextStyle.copyWith(
+                            fontWeight: pw.FontWeight.bold,
+                          ),
                         ),
                       );
                       break;
@@ -297,7 +338,9 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
-                          style: pw.TextStyle(fontStyle: pw.FontStyle.italic),
+                          style: theme.defaultTextStyle.copyWith(
+                            fontStyle: pw.FontStyle.italic,
+                          ),
                         ),
                       );
                       break;
@@ -305,8 +348,9 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
-                          style: pw.TextStyle(
-                              decoration: pw.TextDecoration.lineThrough),
+                          style: theme.defaultTextStyle.copyWith(
+                            decoration: pw.TextDecoration.lineThrough,
+                          ),
                         ),
                       );
                       break;
@@ -314,10 +358,9 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
-                          style: pw.TextStyle(
+                          style: theme.defaultTextStyle.copyWith(
                             font: pw.Font.courier(),
-                            background:
-                                pw.BoxDecoration(color: PdfColors.grey200),
+                            background: pw.BoxDecoration(color: PdfColors.grey200),
                           ),
                         ),
                       );
@@ -326,6 +369,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                       spans.add(
                         pw.TextSpan(
                           text: child.textContent,
+                          style: theme.defaultTextStyle,
                         ),
                       );
                   }
@@ -333,6 +377,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                   spans.add(
                     pw.TextSpan(
                       text: child.text,
+                      style: theme.defaultTextStyle,
                     ),
                   );
                 }
@@ -343,7 +388,10 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
                 pdfWidgets.add(
                   pw.Container(
                     child: pw.RichText(
-                      text: pw.TextSpan(children: spans),
+                      text: pw.TextSpan(
+                        children: spans,
+                        style: theme.defaultTextStyle,
+                      ),
                     ),
                   ),
                 );
@@ -427,10 +475,13 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
       }
     }
   } catch (e) {
+    // 如果Markdown解析失败，使用普通文本
+    print('Markdown解析失败: $e');
     pdfWidgets.add(
       pw.Container(
         child: pw.Text(
           markdownText,
+          style: theme.defaultTextStyle,
         ),
       ),
     );
@@ -438,10 +489,12 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
 
   // 如果没有内容，添加原始文本
   if (pdfWidgets.isEmpty) {
+    print('没有解析出任何内容，使用原始文本');
     pdfWidgets.add(
       pw.Container(
         child: pw.Text(
           markdownText,
+          style: theme.defaultTextStyle,
         ),
       ),
     );
@@ -450,13 +503,17 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
   // 创建PDF页面，使用MultiPage实现自动分页
   pdf.addPage(
     pw.MultiPage(
+      theme: theme,
       pageFormat: PdfPageFormat.a4,
       margin: const pw.EdgeInsets.all(20),
       build: (context) => pdfWidgets,
     ),
   );
 
+  // 保存PDF
+  print('开始保存PDF');
   final Uint8List pdfBytes = await pdf.save();
+  print('PDF保存成功');
 
   return pdfBytes;
 }
