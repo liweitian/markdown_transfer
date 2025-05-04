@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import '../models/history_item.dart';
@@ -33,15 +34,16 @@ class _HistoryPageState extends State<HistoryPage> {
     });
   }
 
-  Future<void> _previewPDF(HistoryItem item) async {
+  Future<void> _previewFile(HistoryItem item) async {
     if (!_historyService.isFileExists(item.localPath)) {
-      // TODO: 如果文件不存在，调用重新生成的方法
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('PDF file does not exist, regenerating...')),
+        const SnackBar(content: Text('File does not exist')),
       );
       return;
     }
+
+    final file = File(item.localPath);
+    final content = await file.readAsString();
 
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -49,12 +51,29 @@ class _HistoryPageState extends State<HistoryPage> {
           appBar: AppBar(
             title: Text(item.title),
           ),
-          body: PDFView(
-            filePath: item.localPath,
-          ),
+          body: _buildPreviewWidget(item.type, item.localPath, content),
         ),
       ),
     );
+  }
+
+  Widget _buildPreviewWidget(String type, String filePath, String content) {
+    switch (type) {
+      case 'PDF':
+        return PDFView(filePath: filePath);
+      case 'Word':
+      case 'Text':
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: SelectableText(content),
+        );
+      case 'Markdown':
+        return Markdown(data: content);
+      default:
+        return Center(
+          child: Text('Preview not supported for ${type} files'),
+        );
+    }
   }
 
   Future<void> _deleteHistoryItem(HistoryItem item) async {
@@ -128,7 +147,7 @@ class _HistoryPageState extends State<HistoryPage> {
         leading: Icon(
           item.type == 'PDF'
               ? Icons.picture_as_pdf_outlined
-              : item.type == 'Document'
+              : item.type == 'Word'
                   ? Icons.description_outlined
                   : item.type == 'Slides'
                       ? Icons.slideshow_outlined
@@ -195,7 +214,7 @@ class _HistoryPageState extends State<HistoryPage> {
             }
           },
         ),
-        onTap: () => _previewPDF(item),
+        onTap: () => _previewFile(item),
       ),
     );
   }
@@ -269,7 +288,7 @@ class _HistoryPageState extends State<HistoryPage> {
               child: Row(
                 children: [
                   _buildFilterChip('All'),
-                  ...['Document', 'PDF', 'Slides', 'Sheet', 'Image', 'Text']
+                  ...['Word', 'PDF', 'Slides', 'Sheet', 'Image', 'Text']
                       .map((type) => _buildFilterChip(type)),
                 ],
               ),
