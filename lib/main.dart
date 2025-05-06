@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'pages/home_page.dart';
 import 'pages/history_page.dart';
 import 'pages/settings_page.dart';
+import 'common/oss.dart';
 
 void main() {
+  Oss.initOSS();
   runApp(const MyApp());
 }
 
