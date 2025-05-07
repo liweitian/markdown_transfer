@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import '../util.dart' show generatePdfBytes;
 import '../utils/pdf_utils.dart';
@@ -11,6 +14,8 @@ import '../utils/pptx_utils.dart';
 import '../utils/text_utils.dart';
 import '../utils/image_utils.dart';
 import 'dart:ui' as ui;
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:markdown/markdown.dart' as md;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -27,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   File? _previewImageFile;
   ui.Image? _previewImage;
   bool _isPreviewing = false;
+  double _fontSize = 32.0;
 
   @override
   void initState() {
@@ -47,8 +53,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generatePDF() async {
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter content')),
+      Fluttertoast.showToast(
+        msg: '请输入内容',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
       );
       return;
     }
@@ -85,8 +93,10 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Failed to generate PDF: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PDF: $e')),
+        Fluttertoast.showToast(
+          msg: 'Failed to generate PDF: $e',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
         );
       }
     } finally {
@@ -100,8 +110,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generateWord() async {
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter content')),
+      Fluttertoast.showToast(
+        msg: '请输入内容',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
       );
       return;
     }
@@ -123,8 +135,10 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Failed to generate Word document: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate Word document: $e')),
+        Fluttertoast.showToast(
+          msg: 'Failed to generate Word document: $e',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
         );
       }
     } finally {
@@ -138,8 +152,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generateXlsx() async {
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter content')),
+      Fluttertoast.showToast(
+        msg: '请输入内容',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
       );
       return;
     }
@@ -161,8 +177,10 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Failed to generate Excel document: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate Excel document: $e')),
+        Fluttertoast.showToast(
+          msg: 'Failed to generate Excel document: $e',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
         );
       }
     } finally {
@@ -176,8 +194,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generatePPTX() async {
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter content')),
+      Fluttertoast.showToast(
+        msg: '请输入内容',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
       );
       return;
     }
@@ -199,8 +219,10 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Failed to generate PowerPoint document: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate PowerPoint document: $e')),
+        Fluttertoast.showToast(
+          msg: 'Failed to generate PowerPoint document: $e',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
         );
       }
     } finally {
@@ -214,8 +236,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generateText() async {
     if (_contentController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter content')),
+      Fluttertoast.showToast(
+        msg: '请输入内容',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
       );
       return;
     }
@@ -225,8 +249,9 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final file = await TextUtils.generateTextFromContent(_contentController.text);
-      
+      final file =
+          await TextUtils.generateTextFromContent(_contentController.text);
+
       if (mounted) {
         await Share.shareXFiles(
           [XFile(file.path)],
@@ -236,8 +261,10 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Failed to generate Text document: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to generate Text document: $e')),
+        Fluttertoast.showToast(
+          msg: 'Failed to generate Text document: $e',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
         );
       }
     } finally {
@@ -256,6 +283,7 @@ class _HomePageState extends State<HomePage> {
     final img = await ImageUtils.previewImageFromText(
       _contentController.text,
       kImageThemes[themeIndex ?? _selectedThemeIndex],
+      fontSize: _fontSize,
     );
     setState(() {
       _previewImage = img;
@@ -273,15 +301,21 @@ class _HomePageState extends State<HomePage> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
-              height: MediaQuery.of(context).size.height * 2/3,
+              height: MediaQuery.of(context).size.height * 2 / 3,
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('图片预览', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('Image Preview',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   if (_isPreviewing)
-                    const CircularProgressIndicator()
+                    const Expanded(
+                      child: Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
                   else if (_previewImage != null)
                     Expanded(
                       child: SingleChildScrollView(
@@ -297,7 +331,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       _buildOptionButton(
                         icon: Icons.palette_outlined,
-                        label: '主题',
+                        label: 'Theme',
                         onTap: () {
                           showModalBottomSheet(
                             context: context,
@@ -307,12 +341,16 @@ class _HomePageState extends State<HomePage> {
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Text('选择主题', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    const Text('Select Theme',
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold)),
                                     const SizedBox(height: 16),
                                     SizedBox(
                                       height: 200,
                                       child: GridView.builder(
-                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                        gridDelegate:
+                                            const SliverGridDelegateWithFixedCrossAxisCount(
                                           crossAxisCount: 2,
                                           childAspectRatio: 2.5,
                                           crossAxisSpacing: 10,
@@ -326,31 +364,38 @@ class _HomePageState extends State<HomePage> {
                                               setModalState(() {
                                                 _isPreviewing = true;
                                               });
-                                              final img = await ImageUtils.previewImageFromText(
+                                              final img = await ImageUtils
+                                                  .previewImageFromText(
                                                 _contentController.text,
                                                 theme,
+                                                fontSize: _fontSize,
                                               );
                                               setModalState(() {
                                                 _previewImage = img;
                                                 _selectedThemeIndex = index;
                                                 _isPreviewing = false;
                                               });
-                                              // Navigator.pop(context);
                                             },
                                             child: Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: theme.backgroundColors[0],
+                                                color:
+                                                    theme.backgroundColors[0],
                                                 border: Border.all(
-                                                  color: index == _selectedThemeIndex ? Colors.blue : Colors.transparent,
+                                                  color: index ==
+                                                          _selectedThemeIndex
+                                                      ? Colors.blue
+                                                      : Colors.transparent,
                                                   width: 2,
                                                 ),
-                                                borderRadius: BorderRadius.circular(8),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
                                               child: Center(
                                                 child: Text(
                                                   theme.name,
-                                                  style: TextStyle(color: theme.textColor),
+                                                  style: TextStyle(
+                                                      color: theme.textColor),
                                                 ),
                                               ),
                                             ),
@@ -367,26 +412,235 @@ class _HomePageState extends State<HomePage> {
                       ),
                       _buildOptionButton(
                         icon: Icons.format_size,
-                        label: '字号',
+                        label: 'Font Size',
                         onTap: () {
-                          // TODO: 实现字号调整功能
+                          _showFontSizeDrawer();
                         },
                       ),
                       _buildOptionButton(
                         icon: Icons.save_alt,
-                        label: '保存',
+                        label: 'Save',
                         onTap: () async {
-                          final file = await ImageUtils.generateImageFromText(
-                            _contentController.text,
-                            kImageThemes[_selectedThemeIndex],
-                          );
-                          // Navigator.of(context).pop();
-                          setState(() {
-                            _previewImageFile = file;
-                          });
+                          try {
+                            // 检查权限
+                            PermissionStatus status = PermissionStatus.denied;
+                            if (Platform.isAndroid) {
+                              if (await Permission.manageExternalStorage.isGranted) {
+                                // 已授权
+                              } else {
+                                status = await Permission.manageExternalStorage.request();
+                                if (status.isGranted) {
+                                  // 授权成功
+                                } else if (status.isPermanentlyDenied) {
+                                  // 引导用户去设置
+                                  await openAppSettings();
+                                } else {
+                                  // 拒绝
+                                }
+                              }
+                            } else if (Platform.isIOS) {
+                              status = await Permission.photos.request();
+                            }
+
+                            if (!status.isGranted) {
+                              if (status.isPermanentlyDenied) {
+                                // 显示设置对话框
+                                final openSettings = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text('Permission Denied'),
+                                      content: const Text('Please enable storage permission in settings'),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: const Text('Cancel'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop(false);
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: const Text('Settings'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop(true);
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                                
+                                if (openSettings == true) {
+                                  await openAppSettings();
+                                }
+                              } else {
+                                Fluttertoast.showToast(
+                                  msg: 'Storage permission is required to save image',
+                                  toastLength: Toast.LENGTH_SHORT,
+                                  gravity: ToastGravity.CENTER,
+                                );
+                              }
+                              return;
+                            }
+
+                            setModalState(() {
+                              _isPreviewing = true;
+                            });
+
+                            final file = await ImageUtils.generateImageFromText(
+                              _contentController.text,
+                              kImageThemes[_selectedThemeIndex],
+                            );
+                            
+                            final bytes = await file.readAsBytes();
+                            final result = await ImageGallerySaver.saveImage(
+                              bytes,
+                              quality: 100,
+                              name: "AI_Transfer_${DateTime.now().millisecondsSinceEpoch}"
+                            );
+                            
+                            setModalState(() {
+                              _isPreviewing = false;
+                            });
+
+                            if (result['isSuccess']) {
+                              Fluttertoast.showToast(
+                                msg: 'Image saved to gallery',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.CENTER,
+                              );
+                            } else {
+                              Fluttertoast.showToast(
+                                msg: 'Save failed',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.CENTER,
+                              );
+                            }
+                          } catch (e) {
+                            print('Save image failed: $e');
+                            setModalState(() {
+                              _isPreviewing = false;
+                            });
+                            Fluttertoast.showToast(
+                              msg: 'Save failed: $e',
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.CENTER,
+                            );
+                          }
                         },
                       ),
                     ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showFontSizeDrawer() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '调整字体大小',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove),
+                        onPressed: () async {
+                          if (_fontSize > 16) {
+                            setModalState(() {
+                              _isPreviewing = true;
+                            });
+                            final img = await ImageUtils.previewImageFromText(
+                              _contentController.text,
+                              kImageThemes[_selectedThemeIndex],
+                              fontSize: _fontSize - 2,
+                            );
+                            setModalState(() {
+                              _fontSize -= 2;
+                              _previewImage = img;
+                              _isPreviewing = false;
+                            });
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          }
+                        },
+                      ),
+                      Text(
+                        '${_fontSize.toInt()}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.add),
+                        onPressed: () async {
+                          if (_fontSize < 48) {
+                            setModalState(() {
+                              _isPreviewing = true;
+                            });
+                            final img = await ImageUtils.previewImageFromText(
+                              _contentController.text,
+                              kImageThemes[_selectedThemeIndex],
+                              fontSize: _fontSize + 2,
+                            );
+                            setModalState(() {
+                              _fontSize += 2;
+                              _previewImage = img;
+                              _isPreviewing = false;
+                            });
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Slider(
+                    value: _fontSize,
+                    min: 16,
+                    max: 48,
+                    divisions: 16,
+                    label: _fontSize.toInt().toString(),
+                    onChanged: (value) async {
+                      setModalState(() {
+                        _isPreviewing = true;
+                      });
+                      final img = await ImageUtils.previewImageFromText(
+                        _contentController.text,
+                        kImageThemes[_selectedThemeIndex],
+                        fontSize: value,
+                      );
+                      setModalState(() {
+                        _fontSize = value;
+                        _previewImage = img;
+                        _isPreviewing = false;
+                      });
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
                   ),
                 ],
               ),
@@ -588,10 +842,10 @@ class _HomePageState extends State<HomePage> {
                                     'Slides', _generatePPTX),
                                 _buildFormatButton(Icons.table_chart_outlined,
                                     'Sheet', _generateXlsx),
-                                _buildFormatButton(
-                                    Icons.image_outlined, 'Image', _showImagePreviewDrawer),
-                                _buildFormatButton(
-                                    Icons.text_fields_outlined, 'Text', _generateText),
+                                _buildFormatButton(Icons.image_outlined,
+                                    'Image', _showImagePreviewDrawer),
+                                _buildFormatButton(Icons.text_fields_outlined,
+                                    'Text', _generateText),
                               ],
                             ),
                           ],
@@ -606,5 +860,193 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  static List<TextSpan> _parseMarkdownToTextSpans(String markdownText, Color textColor, double fontSize) {
+    final document = md.Document(
+      extensionSet: md.ExtensionSet.gitHubWeb,
+      encodeHtml: false,
+    );
+
+    // 预处理文本，确保换行符统一
+    final processedText = markdownText
+        .replaceAll('\r\n', '\n')
+        .replaceAll('\r', '\n');
+
+    // 预处理任务列表
+    final processedLines = processedText.split('\n').map((line) {
+      if (line.trim().startsWith('- [ ]')) {
+        return line.replaceFirst('- [ ]', '* [ ]');
+      } else if (line.trim().startsWith('- [x]') ||
+          line.trim().startsWith('- [X]')) {
+        return line.replaceFirst(RegExp(r'- \[[xX]\]'), '* [x]');
+      }
+      return line;
+    }).join('\n');
+
+    final nodes = document.parseLines(processedLines.split('\n'));
+    final spans = <TextSpan>[];
+
+    void processNode(md.Node node) {
+      if (node is md.Text) {
+        spans.add(TextSpan(
+          text: node.text,
+          style: TextStyle(
+            color: textColor,
+            fontSize: fontSize,
+          ),
+        ));
+      } else if (node is md.Element) {
+        switch (node.tag) {
+          case 'strong':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+              ),
+            ));
+            break;
+          case 'em':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+                fontStyle: FontStyle.italic,
+              ),
+            ));
+            break;
+          case 'h1':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize * 1.25,
+                fontWeight: FontWeight.bold,
+              ),
+            ));
+            spans.add(const TextSpan(text: '\n\n'));
+            break;
+          case 'h2':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize * 1.15,
+                fontWeight: FontWeight.bold,
+              ),
+            ));
+            spans.add(const TextSpan(text: '\n\n'));
+            break;
+          case 'h3':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize * 1.1,
+                fontWeight: FontWeight.bold,
+              ),
+            ));
+            spans.add(const TextSpan(text: '\n\n'));
+            break;
+          case 'p':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'ul':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'ol':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'li':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'blockquote':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'code':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'pre':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'a':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'img':
+            spans.add(TextSpan(
+              text: node.textContent,
+              style: TextStyle(
+                color: textColor,
+                fontSize: fontSize,
+              ),
+            ));
+            break;
+          case 'br':
+            spans.add(TextSpan(text: '\n'));
+            break;
+          default:
+            if (node.children != null && node.children!.isNotEmpty) {
+              processNode(node.children![0]);
+            }
+        }
+      }
+    }
+
+    for (var node in nodes) {
+      processNode(node);
+    }
+
+    return spans;
   }
 }
