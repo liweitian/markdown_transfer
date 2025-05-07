@@ -9,6 +9,8 @@ import '../utils/word_utils.dart';
 import '../utils/xlsx_utils.dart';
 import '../utils/pptx_utils.dart';
 import '../utils/text_utils.dart';
+import '../utils/image_utils.dart';
+import 'dart:ui' as ui;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,6 +23,10 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
   bool _isGenerating = false;
+  int _selectedThemeIndex = 0;
+  File? _previewImageFile;
+  ui.Image? _previewImage;
+  bool _isPreviewing = false;
 
   @override
   void initState() {
@@ -243,6 +249,180 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> _generatePreviewImage({int? themeIndex}) async {
+    setState(() {
+      _isPreviewing = true;
+    });
+    final img = await ImageUtils.previewImageFromText(
+      _contentController.text,
+      kImageThemes[themeIndex ?? _selectedThemeIndex],
+    );
+    setState(() {
+      _previewImage = img;
+      if (themeIndex != null) _selectedThemeIndex = themeIndex;
+      _isPreviewing = false;
+    });
+  }
+
+  void _showImagePreviewDrawer() async {
+    await _generatePreviewImage();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 2/3,
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('图片预览', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  if (_isPreviewing)
+                    const CircularProgressIndicator()
+                  else if (_previewImage != null)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: RawImage(
+                          image: _previewImage,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildOptionButton(
+                        icon: Icons.palette_outlined,
+                        label: '主题',
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            builder: (context) {
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Text('选择主题', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      height: 200,
+                                      child: GridView.builder(
+                                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          childAspectRatio: 2.5,
+                                          crossAxisSpacing: 10,
+                                          mainAxisSpacing: 10,
+                                        ),
+                                        itemCount: kImageThemes.length,
+                                        itemBuilder: (context, index) {
+                                          final theme = kImageThemes[index];
+                                          return GestureDetector(
+                                            onTap: () async {
+                                              setModalState(() {
+                                                _isPreviewing = true;
+                                              });
+                                              final img = await ImageUtils.previewImageFromText(
+                                                _contentController.text,
+                                                theme,
+                                              );
+                                              setModalState(() {
+                                                _previewImage = img;
+                                                _selectedThemeIndex = index;
+                                                _isPreviewing = false;
+                                              });
+                                              // Navigator.pop(context);
+                                            },
+                                            child: Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: theme.backgroundColors[0],
+                                                border: Border.all(
+                                                  color: index == _selectedThemeIndex ? Colors.blue : Colors.transparent,
+                                                  width: 2,
+                                                ),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  theme.name,
+                                                  style: TextStyle(color: theme.textColor),
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      _buildOptionButton(
+                        icon: Icons.format_size,
+                        label: '字号',
+                        onTap: () {
+                          // TODO: 实现字号调整功能
+                        },
+                      ),
+                      _buildOptionButton(
+                        icon: Icons.save_alt,
+                        label: '保存',
+                        onTap: () async {
+                          final file = await ImageUtils.generateImageFromText(
+                            _contentController.text,
+                            kImageThemes[_selectedThemeIndex],
+                          );
+                          // Navigator.of(context).pop();
+                          setState(() {
+                            _previewImageFile = file;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildOptionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: Colors.blue[700]),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPasteButton(TextEditingController controller) {
     return GestureDetector(
       onTap: () async {
@@ -409,7 +589,7 @@ class _HomePageState extends State<HomePage> {
                                 _buildFormatButton(Icons.table_chart_outlined,
                                     'Sheet', _generateXlsx),
                                 _buildFormatButton(
-                                    Icons.image_outlined, 'Image', () {}),
+                                    Icons.image_outlined, 'Image', _showImagePreviewDrawer),
                                 _buildFormatButton(
                                     Icons.text_fields_outlined, 'Text', _generateText),
                               ],
