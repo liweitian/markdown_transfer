@@ -27,12 +27,24 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _contentController = TextEditingController();
   final FocusNode _contentFocusNode = FocusNode();
-  bool _isGenerating = false;
   int _selectedThemeIndex = 0;
-  File? _previewImageFile;
   ui.Image? _previewImage;
   bool _isPreviewing = false;
   double _fontSize = 32.0;
+  String _selectedFont = 'Roboto';
+
+  final List<String> _availableFonts = [
+    'Roboto',
+    'Arial',
+    'Times New Roman',
+    'Courier New',
+    'Georgia',
+    'Verdana',
+    'Helvetica',
+    'Tahoma',
+    'Trebuchet MS',
+    'Impact',
+  ];
 
   @override
   void initState() {
@@ -60,10 +72,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
-    setState(() {
-      _isGenerating = true;
-    });
 
     try {
       final String markdownContent = _contentController.text;
@@ -99,12 +107,6 @@ class _HomePageState extends State<HomePage> {
           gravity: ToastGravity.CENTER,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
     }
   }
 
@@ -117,10 +119,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
-    setState(() {
-      _isGenerating = true;
-    });
 
     try {
       final file =
@@ -141,12 +139,6 @@ class _HomePageState extends State<HomePage> {
           gravity: ToastGravity.CENTER,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
     }
   }
 
@@ -159,10 +151,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
-    setState(() {
-      _isGenerating = true;
-    });
 
     try {
       final file =
@@ -183,12 +171,6 @@ class _HomePageState extends State<HomePage> {
           gravity: ToastGravity.CENTER,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
     }
   }
 
@@ -201,10 +183,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
-    setState(() {
-      _isGenerating = true;
-    });
 
     try {
       final file =
@@ -225,12 +203,6 @@ class _HomePageState extends State<HomePage> {
           gravity: ToastGravity.CENTER,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
     }
   }
 
@@ -243,10 +215,6 @@ class _HomePageState extends State<HomePage> {
       );
       return;
     }
-
-    setState(() {
-      _isGenerating = true;
-    });
 
     try {
       final file =
@@ -267,12 +235,6 @@ class _HomePageState extends State<HomePage> {
           gravity: ToastGravity.CENTER,
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isGenerating = false;
-        });
-      }
     }
   }
 
@@ -284,6 +246,7 @@ class _HomePageState extends State<HomePage> {
       _contentController.text,
       kImageThemes[themeIndex ?? _selectedThemeIndex],
       fontSize: _fontSize,
+      fontFamily: _selectedFont,
     );
     setState(() {
       _previewImage = img;
@@ -417,6 +380,14 @@ class _HomePageState extends State<HomePage> {
                           _showFontSizeDrawer();
                         },
                       ),
+                      //Font
+                      _buildOptionButton(
+                        icon: Icons.font_download,
+                        label: 'Font',
+                        onTap: () {
+                          _showFontDrawer();
+                        },
+                      ),
                       _buildOptionButton(
                         icon: Icons.save_alt,
                         label: 'Save',
@@ -425,10 +396,12 @@ class _HomePageState extends State<HomePage> {
                             // 检查权限
                             PermissionStatus status = PermissionStatus.denied;
                             if (Platform.isAndroid) {
-                              if (await Permission.manageExternalStorage.isGranted) {
+                              if (await Permission
+                                  .manageExternalStorage.isGranted) {
                                 // 已授权
                               } else {
-                                status = await Permission.manageExternalStorage.request();
+                                status = await Permission.manageExternalStorage
+                                    .request();
                                 if (status.isGranted) {
                                   // 授权成功
                                 } else if (status.isPermanentlyDenied) {
@@ -450,7 +423,8 @@ class _HomePageState extends State<HomePage> {
                                   builder: (BuildContext context) {
                                     return AlertDialog(
                                       title: const Text('Permission Denied'),
-                                      content: const Text('Please enable storage permission in settings'),
+                                      content: const Text(
+                                          'Please enable storage permission in settings'),
                                       actions: <Widget>[
                                         TextButton(
                                           child: const Text('Cancel'),
@@ -468,13 +442,14 @@ class _HomePageState extends State<HomePage> {
                                     );
                                   },
                                 );
-                                
+
                                 if (openSettings == true) {
                                   await openAppSettings();
                                 }
                               } else {
                                 Fluttertoast.showToast(
-                                  msg: 'Storage permission is required to save image',
+                                  msg:
+                                      'Storage permission is required to save image',
                                   toastLength: Toast.LENGTH_SHORT,
                                   gravity: ToastGravity.CENTER,
                                 );
@@ -490,14 +465,14 @@ class _HomePageState extends State<HomePage> {
                               _contentController.text,
                               kImageThemes[_selectedThemeIndex],
                             );
-                            
+
                             final bytes = await file.readAsBytes();
                             final result = await ImageGallerySaver.saveImage(
-                              bytes,
-                              quality: 100,
-                              name: "AI_Transfer_${DateTime.now().millisecondsSinceEpoch}"
-                            );
-                            
+                                bytes,
+                                quality: 100,
+                                name:
+                                    "AI_Transfer_${DateTime.now().millisecondsSinceEpoch}");
+
                             setModalState(() {
                               _isPreviewing = false;
                             });
@@ -579,7 +554,9 @@ class _HomePageState extends State<HomePage> {
                               _isPreviewing = false;
                             });
                             if (mounted) {
-                              setState(() {});
+                              setState(() {
+                                _previewImage = img;
+                              });
                             }
                           }
                         },
@@ -609,7 +586,9 @@ class _HomePageState extends State<HomePage> {
                               _isPreviewing = false;
                             });
                             if (mounted) {
-                              setState(() {});
+                              setState(() {
+                                _previewImage = img;
+                              });
                             }
                           }
                         },
@@ -638,9 +617,79 @@ class _HomePageState extends State<HomePage> {
                         _isPreviewing = false;
                       });
                       if (mounted) {
-                        setState(() {});
+                        setState(() {
+                          _previewImage = img;
+                        });
                       }
                     },
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showFontDrawer() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    '选择字体',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _availableFonts.length,
+                      itemBuilder: (context, index) {
+                        final font = _availableFonts[index];
+                        return ListTile(
+                          title: Text(
+                            'Hello, world!',
+                            style: TextStyle(
+                              fontFamily: font,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Text(font),
+                          selected: font == _selectedFont,
+                          onTap: () async {
+                            setModalState(() {
+                              _isPreviewing = true;
+                            });
+                            final img = await ImageUtils.previewImageFromText(
+                              _contentController.text,
+                              kImageThemes[_selectedThemeIndex],
+                              fontSize: _fontSize,
+                              fontFamily: font,
+                            );
+                            setModalState(() {
+                              _selectedFont = font;
+                              _previewImage = img;
+                              _isPreviewing = false;
+                            });
+                            if (mounted) {
+                              setState(() {
+                                _previewImage = img;
+                              });
+                            }
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -862,16 +911,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  static List<TextSpan> _parseMarkdownToTextSpans(String markdownText, Color textColor, double fontSize) {
+  static List<TextSpan> _parseMarkdownToTextSpans(
+      String markdownText, Color textColor, double fontSize) {
     final document = md.Document(
       extensionSet: md.ExtensionSet.gitHubWeb,
       encodeHtml: false,
     );
 
     // 预处理文本，确保换行符统一
-    final processedText = markdownText
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n');
+    final processedText =
+        markdownText.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
 
     // 预处理任务列表
     final processedLines = processedText.split('\n').map((line) {

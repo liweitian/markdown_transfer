@@ -96,7 +96,7 @@ const List<ImageThemeStyle> kImageThemes = [
 ];
 
 class ImageUtils {
-  static List<TextSpan> _parseMarkdownToTextSpans(String markdownText, Color textColor, [double? fontSize]) {
+  static List<TextSpan> _parseMarkdownToTextSpans(String markdownText, Color textColor, [double? fontSize, String? fontFamily]) {
     final document = md.Document(
       extensionSet: md.ExtensionSet.gitHubWeb,
       encodeHtml: false,
@@ -128,6 +128,7 @@ class ImageUtils {
           style: TextStyle(
             color: textColor,
             fontSize: fontSize ?? 32,
+            fontFamily: fontFamily,
           ),
         ));
       } else if (node is md.Element) {
@@ -139,6 +140,7 @@ class ImageUtils {
                 color: textColor,
                 fontSize: fontSize ?? 32,
                 fontWeight: FontWeight.bold,
+                fontFamily: fontFamily,
               ),
             ));
             break;
@@ -149,6 +151,7 @@ class ImageUtils {
                 color: textColor,
                 fontSize: fontSize ?? 32,
                 fontStyle: FontStyle.italic,
+                fontFamily: fontFamily,
               ),
             ));
             break;
@@ -159,6 +162,7 @@ class ImageUtils {
                 color: textColor,
                 fontSize: fontSize ?? 40,
                 fontWeight: FontWeight.bold,
+                fontFamily: fontFamily,
               ),
             ));
             spans.add(const TextSpan(text: '\n\n'));
@@ -170,6 +174,7 @@ class ImageUtils {
                 color: textColor,
                 fontSize: fontSize ?? 36,
                 fontWeight: FontWeight.bold,
+                fontFamily: fontFamily,
               ),
             ));
             spans.add(const TextSpan(text: '\n\n'));
@@ -181,6 +186,7 @@ class ImageUtils {
                 color: textColor,
                 fontSize: fontSize ?? 34,
                 fontWeight: FontWeight.bold,
+                fontFamily: fontFamily,
               ),
             ));
             spans.add(const TextSpan(text: '\n\n'));
@@ -208,6 +214,7 @@ class ImageUtils {
                       style: TextStyle(
                         color: textColor,
                         fontSize: fontSize ?? 32,
+                        fontFamily: fontFamily,
                       ),
                     ));
                   } else if (text.startsWith('[x]')) {
@@ -216,6 +223,7 @@ class ImageUtils {
                       style: TextStyle(
                         color: textColor,
                         fontSize: fontSize ?? 32,
+                        fontFamily: fontFamily,
                       ),
                     ));
                   } else {
@@ -224,6 +232,7 @@ class ImageUtils {
                       style: TextStyle(
                         color: textColor,
                         fontSize: fontSize ?? 32,
+                        fontFamily: fontFamily,
                       ),
                     ));
                   }
@@ -247,8 +256,7 @@ class ImageUtils {
               style: TextStyle(
                 color: textColor,
                 fontSize: fontSize ?? 32,
-                fontFamily: 'monospace',
-                backgroundColor: Colors.grey.withOpacity(0.2),
+                fontFamily: 'Courier',
               ),
             ));
             break;
@@ -355,7 +363,7 @@ class ImageUtils {
     return file;
   }
 
-  static Future<ui.Image> previewImageFromText(String text, ImageThemeStyle theme, {double fontSize = 32.0}) async {
+  static Future<ui.Image> previewImageFromText(String text, ImageThemeStyle theme, {double fontSize = 32.0, String? fontFamily}) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
@@ -363,7 +371,7 @@ class ImageUtils {
     const double padding = 40.0;
     const double cardPadding = 20.0;
     
-    final textSpans = _parseMarkdownToTextSpans(text, theme.textColor, fontSize);
+    final textSpans = _parseMarkdownToTextSpans(text, theme.textColor, fontSize, fontFamily);
     final textPainter = TextPainter(
       text: TextSpan(children: textSpans),
       textDirection: TextDirection.ltr,
