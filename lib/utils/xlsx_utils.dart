@@ -2,8 +2,6 @@ import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:markdown/markdown.dart' as md;
-import '../models/history_item.dart';
-import '../services/history_service.dart';
 
 class XlsxUtils {
   /// 从Markdown内容生成Excel文件
@@ -31,13 +29,17 @@ class XlsxUtils {
             case 'h4':
             case 'h5':
             case 'h6':
-              sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow))
-                .value = node.textContent;
+              sheet
+                  .cell(CellIndex.indexByColumnRow(
+                      columnIndex: 0, rowIndex: currentRow))
+                  .value = node.textContent;
               currentRow++;
               break;
             case 'p':
-              sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow))
-                .value = node.textContent;
+              sheet
+                  .cell(CellIndex.indexByColumnRow(
+                      columnIndex: 0, rowIndex: currentRow))
+                  .value = node.textContent;
               currentRow++;
               break;
             case 'ul':
@@ -59,10 +61,9 @@ class XlsxUtils {
       final filePath = '${directory.path}/converted_$timestamp.xlsx';
       final file = File(filePath);
       await file.writeAsBytes(excel.encode()!);
-      
+
       return file;
     } catch (e) {
-      print('生成Excel文件失败: $e');
       rethrow;
     }
   }
@@ -75,8 +76,10 @@ class XlsxUtils {
     for (var child in node.children!) {
       if (child is md.Element && child.tag == 'li') {
         // 添加列表标记
-        sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow))
-          .value = '• ${child.textContent}';
+        sheet
+            .cell(CellIndex.indexByColumnRow(
+                columnIndex: 0, rowIndex: currentRow))
+            .value = '• ${child.textContent}';
         currentRow++;
       }
     }
@@ -92,8 +95,10 @@ class XlsxUtils {
         int currentCol = 0;
         for (var cell in child.children ?? []) {
           if (cell is md.Element && (cell.tag == 'td' || cell.tag == 'th')) {
-            sheet.cell(CellIndex.indexByColumnRow(columnIndex: currentCol, rowIndex: currentRow))
-              .value = cell.textContent;
+            sheet
+                .cell(CellIndex.indexByColumnRow(
+                    columnIndex: currentCol, rowIndex: currentRow))
+                .value = cell.textContent;
             currentCol++;
           }
         }
@@ -101,4 +106,4 @@ class XlsxUtils {
       }
     }
   }
-} 
+}

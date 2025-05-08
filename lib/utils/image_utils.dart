@@ -1,8 +1,7 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'common_utils.dart';
 
 class ImageThemeStyle {
   final List<Color> backgroundColors;
@@ -358,13 +357,5 @@ class ImageUtils {
     final picture = recorder.endRecording();
     final img = await picture.toImage(width.toInt(), height.toInt());
     return img;
-  }
-
-  static String formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024)
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }

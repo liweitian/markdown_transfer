@@ -1,25 +1,11 @@
-import 'dart:math';
-
-import 'package:ai_transfer/models/history_item.dart';
-import 'package:ai_transfer/services/history_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-import '../util.dart' show generatePdfBytes;
-import '../utils/pdf_utils.dart';
-import '../utils/word_utils.dart';
-import '../utils/xlsx_utils.dart';
-import '../utils/pptx_utils.dart';
-import '../utils/text_utils.dart';
 import '../utils/image_utils.dart';
 import '../utils/file_generator.dart';
 import 'dart:ui' as ui;
-import 'package:markdown/markdown.dart' as md;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -83,17 +69,17 @@ class _HomePageState extends State<HomePage> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text('需要相册权限'),
-                content: const Text('请在设置中允许访问相册，以便保存图片'),
+                title: const Text('Photo Library Permission Required'),
+                content: const Text('Please allow access to photo library in settings to save images'),
                 actions: <Widget>[
                   TextButton(
-                    child: const Text('取消'),
+                    child: const Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop(false);
                     },
                   ),
                   TextButton(
-                    child: const Text('去设置'),
+                    child: const Text('Settings'),
                     onPressed: () {
                       Navigator.of(context).pop(true);
                     },
@@ -110,7 +96,7 @@ class _HomePageState extends State<HomePage> {
       } else {
         if (mounted) {
           Fluttertoast.showToast(
-            msg: '需要相册权限才能保存图片',
+            msg: 'Photo library permission required to save images',
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.CENTER,
           );
@@ -311,21 +297,21 @@ class _HomePageState extends State<HomePage> {
                       ),
                       _buildOptionButton(
                         icon: Icons.format_size,
-                        label: '字体大小',
+                        label: 'Font Size',
                         onTap: () {
                           _showFontSizeDrawer(setModalState);
                         },
                       ),
                       _buildOptionButton(
                         icon: Icons.font_download,
-                        label: '字体',
+                        label: 'Font',
                         onTap: () {
                           _showFontDrawer(setModalState);
                         },
                       ),
                       _buildOptionButton(
                         icon: Icons.save_alt,
-                        label: '保存',
+                        label: 'Save',
                         onTap: () async {
                           try {
                             // 检查权限
@@ -354,9 +340,9 @@ class _HomePageState extends State<HomePage> {
                               },
                             );
                           } catch (e) {
-                            print('Save image failed: $e');
+                            print('Save failed: $e');
                             Fluttertoast.showToast(
-                              msg: '保存失败: $e',
+                              msg: 'Save failed: $e',
                               toastLength: Toast.LENGTH_SHORT,
                               gravity: ToastGravity.CENTER,
                             );

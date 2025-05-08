@@ -3,15 +3,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
-import 'package:markdown/markdown.dart' as md;
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'dart:math';
 import 'dart:ui' as ui;
 
-import '../models/history_item.dart';
-import '../services/history_service.dart';
 import '../util.dart' show generatePdfBytes;
-import 'pdf_utils.dart';
 import 'word_utils.dart';
 import 'xlsx_utils.dart';
 import 'pptx_utils.dart';
@@ -23,7 +19,7 @@ class FileGenerator {
   /// 生成并分享PDF文件
   static Future<void> generateAndSharePDF(String content, BuildContext context) async {
     if (content.isEmpty) {
-      _showToast('请输入内容');
+      _showToast('Please enter content');
       return;
     }
 
@@ -37,7 +33,7 @@ class FileGenerator {
 
       await HistoryUtils.addFileToHistory(
         file: file,
-        title: content.substring(0, min(content.length, 20)),
+        title: "PDF_${content.substring(0, min(content.length, 20))}",
         rawData: content,
         type: 'PDF',
       );
@@ -50,14 +46,14 @@ class FileGenerator {
       }
     } catch (e) {
       print('Failed to generate PDF: $e');
-      _showToast('生成PDF失败: $e');
+      _showToast('Failed to generate PDF: $e');
     }
   }
 
   /// 生成并分享Word文件
   static Future<void> generateAndShareWord(String content, BuildContext context) async {
     if (content.isEmpty) {
-      _showToast('请输入内容');
+      _showToast('Please enter content');
       return;
     }
 
@@ -65,7 +61,7 @@ class FileGenerator {
       final file = await WordUtils.generateWordFromMarkdown(content);
       await HistoryUtils.addFileToHistory(
         file: file,
-        title: content.substring(0, min(content.length, 20)),
+        title: "Word_${content.substring(0, min(content.length, 20))}",
         rawData: content,
         type: 'Word',
       );
@@ -78,14 +74,14 @@ class FileGenerator {
       }
     } catch (e) {
       print('Failed to generate Word document: $e');
-      _showToast('生成Word文件失败: $e');
+      _showToast('Failed to generate Word document: $e');
     }
   }
 
   /// 生成并分享Excel文件
   static Future<void> generateAndShareExcel(String content, BuildContext context) async {
     if (content.isEmpty) {
-      _showToast('请输入内容');
+      _showToast('Please enter content');
       return;
     }
 
@@ -93,7 +89,7 @@ class FileGenerator {
       final file = await XlsxUtils.generateXlsxFromMarkdown(content);
       await HistoryUtils.addFileToHistory(
         file: file,
-        title: content.substring(0, min(content.length, 20)),
+        title: "Sheet_${content.substring(0, min(content.length, 20))}",
         rawData: content,
         type: 'Sheet',
       );
@@ -106,14 +102,14 @@ class FileGenerator {
       }
     } catch (e) {
       print('Failed to generate Excel document: $e');
-      _showToast('生成Excel文件失败: $e');
+      _showToast('Failed to generate Excel document: $e');
     }
   }
 
   /// 生成并分享PowerPoint文件
   static Future<void> generateAndSharePowerPoint(String content, BuildContext context) async {
     if (content.isEmpty) {
-      _showToast('请输入内容');
+      _showToast('Please enter content');
       return;
     }
 
@@ -121,7 +117,7 @@ class FileGenerator {
       final file = await PPTXUtils.generatePPTXFromMarkdown(content);
       await HistoryUtils.addFileToHistory(
         file: file,
-        title: content.substring(0, min(content.length, 20)),
+        title: "Slides_${content.substring(0, min(content.length, 20))}",
         rawData: content,
         type: 'Slides',
       );
@@ -134,14 +130,14 @@ class FileGenerator {
       }
     } catch (e) {
       print('Failed to generate PowerPoint document: $e');
-      _showToast('生成PowerPoint文件失败: $e');
+      _showToast('Failed to generate PowerPoint document: $e');
     }
   }
 
   /// 生成并分享文本文件
   static Future<void> generateAndShareText(String content, BuildContext context) async {
     if (content.isEmpty) {
-      _showToast('请输入内容');
+      _showToast('Please enter content');
       return;
     }
 
@@ -149,7 +145,7 @@ class FileGenerator {
       final file = await TextUtils.generateTextFromContent(content);
       await HistoryUtils.addFileToHistory(
         file: file,
-        title: content.substring(0, min(content.length, 20)),
+        title: "Text_${content.substring(0, min(content.length, 20))}",
         rawData: content,
         type: 'Text',
       );
@@ -162,7 +158,7 @@ class FileGenerator {
       }
     } catch (e) {
       print('Failed to generate Text document: $e');
-      _showToast('生成文本文件失败: $e');
+      _showToast('Failed to generate Text document: $e');
     }
   }
 
@@ -176,7 +172,7 @@ class FileGenerator {
     Function(bool) onLoadingChanged,
   ) async {
     if (content.isEmpty) {
-      _showToast('请输入内容');
+      _showToast('Please enter content');
       return;
     }
 
@@ -199,7 +195,7 @@ class FileGenerator {
       );
 
       if (result['isSuccess']) {
-        _showToast('图片已保存到相册');
+        _showToast('Image saved to gallery');
         final directory = await getApplicationDocumentsDirectory();
         final fileName = "AI_Transfer_${DateTime.now().millisecondsSinceEpoch}.png";
         final file = File('${directory.path}/$fileName');
@@ -207,16 +203,16 @@ class FileGenerator {
         
         await HistoryUtils.addFileToHistory(
           file: file,
-          title: 'image_${DateTime.now().millisecondsSinceEpoch}',
+          title: 'Image_${DateTime.now().millisecondsSinceEpoch}',
           rawData: content,
           type: 'Image',
         );
       } else {
-        _showToast('保存失败');
+        _showToast('Save failed');
       }
     } catch (e) {
       print('Failed to generate image: $e');
-      _showToast('生成图片失败: $e');
+      _showToast('Failed to generate image: $e');
     } finally {
       onLoadingChanged(false);
     }

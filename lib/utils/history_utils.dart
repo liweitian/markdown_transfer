@@ -1,6 +1,7 @@
 import 'dart:io';
 import '../models/history_item.dart';
 import '../services/history_service.dart';
+import 'common_utils.dart';
 
 class HistoryUtils {
   static final HistoryService _historyService = HistoryService();
@@ -21,7 +22,7 @@ class HistoryUtils {
         id: timestamp.toString(),
         title: title,
         date: date,
-        size: _formatFileSize(file.lengthSync()),
+        size: CommonUtils.formatFileSize(file.lengthSync()),
         type: type,
         rawData: rawData,
         localPath: file.path,
@@ -32,13 +33,5 @@ class HistoryUtils {
       print('添加历史记录失败: $e');
       rethrow;
     }
-  }
-
-  /// 格式化文件大小
-  static String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 } 

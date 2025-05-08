@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-import 'dart:io' show Platform;
 import '../models/history_item.dart';
 import '../services/history_service.dart';
 import '../util.dart' show generatePdfBytes;
-import '../utils/pdf_utils.dart';
 import '../utils/word_utils.dart';
 import '../utils/pptx_utils.dart';
 import '../utils/xlsx_utils.dart';
@@ -345,13 +342,13 @@ class _HistoryPageState extends State<HistoryPage> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('全部', 'All'),
+                  _buildFilterChip('All', 'All'),
                   _buildFilterChip('PDF', 'PDF'),
                   _buildFilterChip('Word', 'Word'),
-                  _buildFilterChip('幻灯片', 'Slides'),
-                  _buildFilterChip('表格', 'Sheet'),
-                  _buildFilterChip('图片', 'Image'),
-                  _buildFilterChip('文本', 'Text'),
+                  _buildFilterChip('Slides', 'Slides'),
+                  _buildFilterChip('Sheet', 'Sheet'),
+                  _buildFilterChip('Image', 'Image'),
+                  _buildFilterChip('Text', 'Text'),
                 ],
               ),
             ),

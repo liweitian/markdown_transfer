@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import '../models/history_item.dart';
-import '../services/history_service.dart';
 import 'package:dio/dio.dart';
 import '../common/oss.dart';
+import 'common_utils.dart';
 
 class WordUtils {
   static final Dio _dio = Dio();
@@ -20,7 +19,7 @@ class WordUtils {
       // 2. 上传到OSS
       final ossObject = await Oss.uploadToOss(tempMdFile);
       if (ossObject == null) {
-        throw Exception('上传OSS失败');
+        throw Exception('Upload failed');
       }
 
       // 3. 调用转换接口
@@ -48,22 +47,14 @@ class WordUtils {
           // 6. 保存为本地文件
           final docxFile = File('${directory.path}/converted_$timestamp.docx');
           await docxFile.writeAsBytes(docxResponse.data);
-          
+
           return docxFile;
         }
       }
-      throw Exception('文件转换失败: ${response.statusCode} - ${response.data}');
+      throw Exception(
+          'transfer failed: ${response.statusCode} - ${response.data}');
     } catch (e) {
-      print('生成Word文档失败: $e');
       rethrow;
     }
-  }
-
-  /// 格式化文件大小
-  static String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }

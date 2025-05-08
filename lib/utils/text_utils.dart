@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart';
 import '../models/history_item.dart';
 import '../services/history_service.dart';
+import 'common_utils.dart';
 
 class TextUtils {
   static final _historyService = HistoryService();
@@ -22,7 +23,7 @@ class TextUtils {
       id: timestamp.toString(),
       title: 'text_$timestamp',
       date: date,
-      size: _formatFileSize(file.lengthSync()),
+      size: CommonUtils.formatFileSize(file.lengthSync()),
       type: 'Text',
       localPath: file.path,  
       rawData: content
@@ -31,12 +32,5 @@ class TextUtils {
     await _historyService.addHistoryItem(historyItem);
     
     return file;
-  }
-
-  static String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
-    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 }
