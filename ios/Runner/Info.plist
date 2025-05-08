@@ -46,9 +46,9 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>需要访问相册以保存生成的图片</string>
+	<string>需要访问相册权限以保存图片</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>需要访问相册以保存生成的图片</string>
+	<string>需要访问相册权限以保存图片</string>
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>需要访问文档文件夹以保存文件</string>
 	<key>NSDownloadsFolderUsageDescription</key>

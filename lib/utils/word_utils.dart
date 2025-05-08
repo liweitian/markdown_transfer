@@ -6,7 +6,6 @@ import 'package:dio/dio.dart';
 import '../common/oss.dart';
 
 class WordUtils {
-  static final HistoryService _historyService = HistoryService();
   static final Dio _dio = Dio();
 
   /// 从Markdown内容生成Word文档
@@ -49,21 +48,6 @@ class WordUtils {
           // 6. 保存为本地文件
           final docxFile = File('${directory.path}/converted_$timestamp.docx');
           await docxFile.writeAsBytes(docxResponse.data);
-
-          // 7. 添加到历史记录
-          final now = DateTime.now();
-          final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-          
-          final historyItem = HistoryItem(
-            id: timestamp.toString(),
-            title: '文档转换_$timestamp',
-            date: date,
-            size: _formatFileSize(docxFile.lengthSync()),
-            type: 'Word',
-            localPath: docxFile.path,
-          );
-
-          await _historyService.addHistoryItem(historyItem);
           
           return docxFile;
         }

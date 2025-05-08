@@ -96,16 +96,17 @@ const List<ImageThemeStyle> kImageThemes = [
 ];
 
 class ImageUtils {
-  static List<TextSpan> _parseMarkdownToTextSpans(String markdownText, Color textColor, [double? fontSize, String? fontFamily]) {
+  static List<TextSpan> _parseMarkdownToTextSpans(
+      String markdownText, Color textColor,
+      [double? fontSize, String? fontFamily]) {
     final document = md.Document(
       extensionSet: md.ExtensionSet.gitHubWeb,
       encodeHtml: false,
     );
 
     // 预处理文本，确保换行符统一
-    final processedText = markdownText
-        .replaceAll('\r\n', '\n')
-        .replaceAll('\r', '\n');
+    final processedText =
+        markdownText.replaceAll('\r\n', '\n').replaceAll('\r', '\n');
 
     // 预处理任务列表
     final processedLines = processedText.split('\n').map((line) {
@@ -286,24 +287,27 @@ class ImageUtils {
     return spans;
   }
 
-  static Future<File> generateImageFromText(String text, ImageThemeStyle theme) async {
+  static Future<ui.Image> previewImageFromText(
+      String text, ImageThemeStyle theme,
+      {double fontSize = 32.0, String? fontFamily}) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
     const double width = 800;
     const double padding = 40.0;
     const double cardPadding = 20.0;
-    
-    final textSpans = _parseMarkdownToTextSpans(text, theme.textColor);
+
+    final textSpans =
+        _parseMarkdownToTextSpans(text, theme.textColor, fontSize, fontFamily);
     final textPainter = TextPainter(
       text: TextSpan(children: textSpans),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.left,
     );
-    
+
     textPainter.layout(maxWidth: width - padding - cardPadding * 2);
     final height = textPainter.height + padding + cardPadding * 2;
-    
+
     // 创建外层渐变背景
     final outerRect = Rect.fromLTWH(0, 0, width, height);
     final outerPaint = Paint()
@@ -333,85 +337,7 @@ class ImageUtils {
       width - cardPadding * 2,
       height - cardPadding * 2,
     );
-    final innerPaint = Paint()
-      ..color = Colors.white.withOpacity(0.9);
-
-    // 绘制内层圆角矩形背景
-    final innerRRect = RRect.fromRectAndRadius(
-      innerRect,
-      Radius.circular(theme.borderRadius - 4),
-    );
-    canvas.drawRRect(innerRRect, innerPaint);
-
-    // 添加内层阴影效果
-    final innerShadowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.05)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.0);
-    canvas.drawRRect(innerRRect, innerShadowPaint);
-
-    // 绘制文本（考虑内层padding）
-    textPainter.paint(canvas, Offset(cardPadding * 2, cardPadding * 2));
-
-    final picture = recorder.endRecording();
-    final img = await picture.toImage(width.toInt(), height.toInt());
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    final pngBytes = byteData!.buffer.asUint8List();
-
-    final directory = await getApplicationDocumentsDirectory();
-    final file = File('${directory.path}/generated_image.png');
-    await file.writeAsBytes(pngBytes);
-    return file;
-  }
-
-  static Future<ui.Image> previewImageFromText(String text, ImageThemeStyle theme, {double fontSize = 32.0, String? fontFamily}) async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    const double width = 800;
-    const double padding = 40.0;
-    const double cardPadding = 20.0;
-    
-    final textSpans = _parseMarkdownToTextSpans(text, theme.textColor, fontSize, fontFamily);
-    final textPainter = TextPainter(
-      text: TextSpan(children: textSpans),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.left,
-    );
-    
-    textPainter.layout(maxWidth: width - padding - cardPadding * 2);
-    final height = textPainter.height + padding + cardPadding * 2;
-    
-    // 创建外层渐变背景
-    final outerRect = Rect.fromLTWH(0, 0, width, height);
-    final outerPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: theme.backgroundColors,
-      ).createShader(outerRect);
-
-    // 绘制外层圆角矩形背景
-    final outerRRect = RRect.fromRectAndRadius(
-      outerRect,
-      Radius.circular(theme.borderRadius),
-    );
-    canvas.drawRRect(outerRRect, outerPaint);
-
-    // 添加外层阴影效果
-    final outerShadowPaint = Paint()
-      ..color = Colors.black.withOpacity(theme.shadowOpacity)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8.0);
-    canvas.drawRRect(outerRRect, outerShadowPaint);
-
-    // 创建内层背景（白色半透明）
-    final innerRect = Rect.fromLTWH(
-      cardPadding,
-      cardPadding,
-      width - cardPadding * 2,
-      height - cardPadding * 2,
-    );
-    final innerPaint = Paint()
-      ..color = Colors.white.withOpacity(0.9);
+    final innerPaint = Paint()..color = Colors.white.withOpacity(0.9);
 
     // 绘制内层圆角矩形背景
     final innerRRect = RRect.fromRectAndRadius(
@@ -433,4 +359,12 @@ class ImageUtils {
     final img = await picture.toImage(width.toInt(), height.toInt());
     return img;
   }
-} 
+
+  static String formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024)
+      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+}

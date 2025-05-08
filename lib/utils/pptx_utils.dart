@@ -6,8 +6,6 @@ import 'package:dart_pptx/dart_pptx.dart';
 import 'package:markdown/markdown.dart' as md;
 
 class PPTXUtils {
-  static final HistoryService _historyService = HistoryService();
-
   /// 从Markdown内容生成PPTX文档
   static Future<File> generatePPTXFromMarkdown(String markdownContent) async {
     try {
@@ -33,21 +31,6 @@ class PPTXUtils {
       } else {
         throw Exception('生成PPTX文件失败');
       }
-
-      // 添加到历史记录
-      final now = DateTime.now();
-      final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      
-      final historyItem = HistoryItem(
-        id: timestamp.toString(),
-        title: '幻灯片_$timestamp',
-        date: date,
-        size: _formatFileSize(pptxFile.lengthSync()),
-        type: 'Slides',
-        localPath: pptxFile.path,
-      );
-
-      await _historyService.addHistoryItem(historyItem);
       
       return pptxFile;
     } catch (e) {

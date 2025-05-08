@@ -20,11 +20,12 @@ class TextUtils {
     
     final historyItem = HistoryItem(
       id: timestamp.toString(),
-      title: '文本转换_$timestamp',
+      title: 'text_$timestamp',
       date: date,
       size: _formatFileSize(file.lengthSync()),
       type: 'Text',
-      localPath: file.path,
+      localPath: file.path,  
+      rawData: content
     );
 
     await _historyService.addHistoryItem(historyItem);

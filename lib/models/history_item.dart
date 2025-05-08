@@ -4,6 +4,7 @@ class HistoryItem {
   final String date;
   final String size;
   final String type;
+  final String rawData;
   final String localPath;
 
   HistoryItem({
@@ -12,6 +13,7 @@ class HistoryItem {
     required this.date,
     required this.size,
     required this.type,
+    required this.rawData,
     required this.localPath,
   });
 
@@ -21,6 +23,7 @@ class HistoryItem {
     'date': date,
     'size': size,
     'type': type,
+    'rawData': rawData,
     'localPath': localPath,
   };
 
@@ -30,6 +33,7 @@ class HistoryItem {
     date: json['date'],
     size: json['size'],
     type: json['type'],
+    rawData: json['rawData'],
     localPath: json['localPath'],
   );
 } 

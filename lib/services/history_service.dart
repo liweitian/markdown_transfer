@@ -40,14 +40,13 @@ class HistoryService {
     final items = await getHistory();
     items.removeWhere((item) => item.id == id);
     await _saveHistory(items);
-    
-    // 删除本地文件
+
     try {
       final item = items.firstWhere((item) => item.id == id);
-      final file = File(item.localPath);
-      if (await file.exists()) {
-        await file.delete();
-      }
+    final file = File(item.localPath);
+    if (await file.exists()) {
+      await file.delete();
+    }
     } catch (e) {
       // Item not found, ignore
     }
@@ -62,4 +61,4 @@ class HistoryService {
   bool isFileExists(String path) {
     return File(path).existsSync();
   }
-} 
+}
