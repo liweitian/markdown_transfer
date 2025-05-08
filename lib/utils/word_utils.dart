@@ -26,7 +26,7 @@ class WordUtils {
 
       // 3. 调用转换接口
       final response = await _dio.post(
-        'http://192.168.18.197:9088/api/v1/nexy/file/convert',
+        'http://test.nexy-ai.com:9088/api/v1/nexy/file/convert',
         data: {
           'file_url': ossObject.url,
           'target_format': 'docx',

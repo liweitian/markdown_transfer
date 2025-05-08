@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
@@ -89,7 +91,7 @@ class _HomePageState extends State<HomePage> {
       // 保存到历史记录
       await PDFUtils.savePDFAndAddToHistory(
         pdfFile: file,
-        title: markdownContent.substring(0, 20),
+        title: markdownContent.substring(0, min(markdownContent.length, 20)),
       );
 
       if (mounted) {
