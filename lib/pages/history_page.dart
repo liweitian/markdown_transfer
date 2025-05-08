@@ -321,7 +321,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('历史记录'),
+        title: const Text('History Record'),
         actions: [
           IconButton(
             icon: const Icon(Icons.search),
