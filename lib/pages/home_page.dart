@@ -66,7 +66,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _generatePDF() async {
     if (_contentController.text.isEmpty) {
       Fluttertoast.showToast(
-        msg: '请输入内容',
+        msg: 'Please enter content',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
       );
@@ -113,7 +113,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _generateWord() async {
     if (_contentController.text.isEmpty) {
       Fluttertoast.showToast(
-        msg: '请输入内容',
+        msg: 'Please enter content',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
       );
@@ -145,7 +145,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _generateXlsx() async {
     if (_contentController.text.isEmpty) {
       Fluttertoast.showToast(
-        msg: '请输入内容',
+        msg: 'Please enter content',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
       );
@@ -177,7 +177,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _generatePPTX() async {
     if (_contentController.text.isEmpty) {
       Fluttertoast.showToast(
-        msg: '请输入内容',
+        msg: 'Please enter content',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
       );
@@ -209,7 +209,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _generateText() async {
     if (_contentController.text.isEmpty) {
       Fluttertoast.showToast(
-        msg: '请输入内容',
+        msg: 'Please enter content',
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.CENTER,
       );
@@ -256,6 +256,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showImagePreviewDrawer() async {
+    if (_contentController.text.isEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Please enter content',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+      );
+      return;
+    }
     await _generatePreviewImage();
     showModalBottomSheet(
       context: context,
@@ -266,6 +274,15 @@ class _HomePageState extends State<HomePage> {
             return Container(
               height: MediaQuery.of(context).size.height * 2 / 3,
               padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, -2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -297,6 +314,7 @@ class _HomePageState extends State<HomePage> {
                         label: 'Theme',
                         onTap: () {
                           showModalBottomSheet(
+                            barrierColor: Colors.transparent,
                             context: context,
                             builder: (context) {
                               return Container(
@@ -345,10 +363,7 @@ class _HomePageState extends State<HomePage> {
                                                 color:
                                                     theme.backgroundColors[0],
                                                 border: Border.all(
-                                                  color: index ==
-                                                          _selectedThemeIndex
-                                                      ? Colors.blue
-                                                      : Colors.transparent,
+                                                  color: Colors.transparent,
                                                   width: 2,
                                                 ),
                                                 borderRadius:
@@ -377,7 +392,7 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.format_size,
                         label: 'Font Size',
                         onTap: () {
-                          _showFontSizeDrawer();
+                          _showFontSizeDrawer(setModalState);
                         },
                       ),
                       //Font
@@ -385,7 +400,7 @@ class _HomePageState extends State<HomePage> {
                         icon: Icons.font_download,
                         label: 'Font',
                         onTap: () {
-                          _showFontDrawer();
+                          _showFontDrawer(setModalState);
                         },
                       ),
                       _buildOptionButton(
@@ -398,7 +413,7 @@ class _HomePageState extends State<HomePage> {
                             if (Platform.isAndroid) {
                               if (await Permission
                                   .manageExternalStorage.isGranted) {
-                                // 已授权
+                                status = PermissionStatus.granted;
                               } else {
                                 status = await Permission.manageExternalStorage
                                     .request();
@@ -514,19 +529,29 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showFontSizeDrawer() {
+  void _showFontSizeDrawer(StateSetter setModalState) {
     showModalBottomSheet(
       context: context,
+      barrierColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (context, setState) {
             return Container(
               padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, -2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    '调整字体大小',
+                    'Adjust Font Size',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -549,15 +574,12 @@ class _HomePageState extends State<HomePage> {
                               fontSize: _fontSize - 2,
                             );
                             setModalState(() {
-                              _fontSize -= 2;
                               _previewImage = img;
                               _isPreviewing = false;
                             });
-                            if (mounted) {
-                              setState(() {
-                                _previewImage = img;
-                              });
-                            }
+                            setState(() {
+                              _fontSize -= 2;
+                            });
                           }
                         },
                       ),
@@ -571,7 +593,7 @@ class _HomePageState extends State<HomePage> {
                       IconButton(
                         icon: const Icon(Icons.add),
                         onPressed: () async {
-                          if (_fontSize < 48) {
+                          if (_fontSize < 40) {
                             setModalState(() {
                               _isPreviewing = true;
                             });
@@ -581,15 +603,12 @@ class _HomePageState extends State<HomePage> {
                               fontSize: _fontSize + 2,
                             );
                             setModalState(() {
-                              _fontSize += 2;
                               _previewImage = img;
                               _isPreviewing = false;
                             });
-                            if (mounted) {
-                              setState(() {
-                                _previewImage = img;
-                              });
-                            }
+                            setState(() {
+                              _fontSize += 2;
+                            });
                           }
                         },
                       ),
@@ -612,15 +631,12 @@ class _HomePageState extends State<HomePage> {
                         fontSize: value,
                       );
                       setModalState(() {
-                        _fontSize = value;
                         _previewImage = img;
                         _isPreviewing = false;
                       });
-                      if (mounted) {
-                        setState(() {
-                          _previewImage = img;
-                        });
-                      }
+                      setState(() {
+                        _fontSize = value;
+                      });
                     },
                   ),
                 ],
@@ -632,19 +648,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showFontDrawer() {
+  void _showFontDrawer(StateSetter setModalState) {
     showModalBottomSheet(
+      barrierColor: Colors.transparent,
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setModalState) {
+          builder: (context, setState) {
             return Container(
+              height: MediaQuery.of(context).size.height * 0.4,
               padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    offset: const Offset(0, -2),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    '选择字体',
+                    'Select Font',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -677,15 +704,12 @@ class _HomePageState extends State<HomePage> {
                               fontFamily: font,
                             );
                             setModalState(() {
-                              _selectedFont = font;
                               _previewImage = img;
                               _isPreviewing = false;
                             });
-                            if (mounted) {
-                              setState(() {
-                                _previewImage = img;
-                              });
-                            }
+                            setState(() {
+                              _selectedFont = font;
+                            });
                           },
                         );
                       },
@@ -727,29 +751,55 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPasteButton(TextEditingController controller) {
-    return GestureDetector(
-      onTap: () async {
-        ClipboardData? data = await Clipboard.getData('text/plain');
-        if (data != null && data.text != null) {
-          controller.text = data.text!;
-          setState(() {});
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(6),
+    return Row(
+      children: [
+        GestureDetector(
+          onTap: () {
+            controller.clear();
+            setState(() {});
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.clear, size: 16, color: Colors.red[700]),
+                const SizedBox(width: 4),
+                Text('Clear', style: TextStyle(color: Colors.red[700])),
+              ],
+            ),
+          ),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.copy, size: 16, color: Colors.blue[700]),
-            const SizedBox(width: 4),
-            Text('Paste', style: TextStyle(color: Colors.blue[700])),
-          ],
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () async {
+            ClipboardData? data = await Clipboard.getData('text/plain');
+            if (data != null && data.text != null) {
+              controller.text = data.text!;
+              setState(() {});
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.copy, size: 16, color: Colors.blue[700]),
+                const SizedBox(width: 4),
+                Text('Paste', style: TextStyle(color: Colors.blue[700])),
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 

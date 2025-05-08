@@ -22,7 +22,7 @@ class ImageThemeStyle {
 
 const List<ImageThemeStyle> kImageThemes = [
   ImageThemeStyle(
-    name: '晴空',
+    name: 'Clear Sky',
     backgroundColors: [
       Color(0xFFE3F2FD),
       Color(0xFFBBDEFB),
@@ -31,7 +31,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.15,
   ),
   ImageThemeStyle(
-    name: '暖阳',
+    name: 'Warm Sun',
     backgroundColors: [
       Color(0xFFFFF3E0),
       Color(0xFFFFE0B2),
@@ -40,7 +40,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.12,
   ),
   ImageThemeStyle(
-    name: '樱色',
+    name: 'Cherry Blossom',
     backgroundColors: [
       Color(0xFFFCE4EC),
       Color(0xFFF8BBD0),
@@ -49,7 +49,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.1,
   ),
   ImageThemeStyle(
-    name: '晨露',
+    name: 'Morning Dew',
     backgroundColors: [
       Color(0xFFE0F7FA),
       Color(0xFFB2EBF2),
@@ -58,7 +58,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.1,
   ),
   ImageThemeStyle(
-    name: '森林',
+    name: 'Forest',
     backgroundColors: [
       Color(0xFFE8F5E9),
       Color(0xFFC8E6C9),
@@ -67,7 +67,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.1,
   ),
   ImageThemeStyle(
-    name: '暮色',
+    name: 'Dusk',
     backgroundColors: [
       Color(0xFFEDE7F6),
       Color(0xFFD1C4E9),
@@ -76,7 +76,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.15,
   ),
   ImageThemeStyle(
-    name: '极光',
+    name: 'Aurora',
     backgroundColors: [
       Color(0xFFE0F2F1),
       Color(0xFFB2DFDB),
@@ -85,7 +85,7 @@ const List<ImageThemeStyle> kImageThemes = [
     shadowOpacity: 0.1,
   ),
   ImageThemeStyle(
-    name: '珊瑚',
+    name: 'Coral',
     backgroundColors: [
       Color(0xFFFFEBEE),
       Color(0xFFFFCDD2),
