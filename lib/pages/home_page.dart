@@ -701,7 +701,7 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Text('AI Transfer'),
+          title: const Text('Transforma'),
           centerTitle: true,
         ),
         body: LayoutBuilder(

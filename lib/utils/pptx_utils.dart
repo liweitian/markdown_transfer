@@ -19,8 +19,8 @@ class PPTXUtils {
 
       // 设置元数据
       pres.title = 'Slides';
-      pres.author = 'AI Transfer';
-      pres.company = 'AI Transfer';
+      pres.author = 'Transforma';
+      pres.company = 'NexyPlanet Inc.';
 
       // 保存文件
       final bytes = await pres.save();
