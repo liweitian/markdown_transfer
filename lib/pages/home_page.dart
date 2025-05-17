@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'dart:io';
 import '../utils/image_utils.dart';
 import '../utils/file_generator.dart';
@@ -120,31 +124,224 @@ class _HomePageState extends State<HomePage> {
     return false;
   }
 
-  Future<void> _generatePDF() async {
-    await FileGenerator.generateAndSharePDF(_contentController.text, context);
-    //add history item
+  Future<void> _saveFile(File file) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = file.path.split('/').last;
+      final savedFile = File(
+          '${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}_$fileName');
+
+      // 复制文件到新位置
+      await file.copy(savedFile.path);
+
+      if (await savedFile.exists()) {
+        if (mounted) {
+          Fluttertoast.showToast(
+            msg: 'File saved successfully',
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      } else {
+        throw Exception('Failed to save file');
+      }
+    } catch (e) {
+      if (mounted) {
+        Fluttertoast.showToast(
+          msg: 'Failed to save file: $e',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    }
   }
 
-  Future<void> _generateWord() async {
-    await FileGenerator.generateAndShareWord(_contentController.text, context);
-    //add history item
+  Future<void> _previewFile(String type) async {
+    if (type == 'Image') {
+      _showImagePreviewDrawer();
+      return;
+    }
+    File? file;
+
+    EasyLoading.show(status: 'Generating...', dismissOnTap: true);
+    switch (type) {
+      case 'PDF':
+        file =
+            await FileGenerator.generatePDF(_contentController.text, context);
+        break;
+      case 'Word':
+        file =
+            await FileGenerator.generateWord(_contentController.text, context);
+        break;
+      case 'Slides':
+        file = await FileGenerator.generatePowerPoint(
+            _contentController.text, context);
+        break;
+      case 'Sheet':
+        file =
+            await FileGenerator.generateExcel(_contentController.text, context);
+        break;
+      case 'Text':
+        file =
+            await FileGenerator.generateText(_contentController.text, context);
+        break;
+      default:
+    }
+    EasyLoading.dismiss();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.7,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    Text(
+                      "Preview",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  margin: const EdgeInsets.all(16),
+                  child: Markdown(
+                    data: _contentController.text,
+                    selectable: true,
+                    padding: const EdgeInsets.all(16),
+                  ),
+                ),
+              ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 46,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              if (file != null) {
+                                await _saveFile(file);
+                                Navigator.pop(context);
+                              }
+                            },
+                            icon: const Icon(Icons.save_rounded, size: 20),
+                            label: const Text(
+                              'Save',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Container(
+                          height: 46,
+                          child: ElevatedButton.icon(
+                            onPressed: () => {
+                              if (file != null)
+                                {
+                                  Share.shareXFiles(
+                                    [XFile(file.path)],
+                                    text: '$type file generated by Transforma',
+                                  )
+                                }
+                            },
+                            icon: const Icon(Icons.share_rounded, size: 20),
+                            label: const Text(
+                              'Share',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey[100],
+                              foregroundColor: Colors.black87,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: Colors.grey.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
-  Future<void> _generateXlsx() async {
-    await FileGenerator.generateAndShareExcel(_contentController.text, context);
-    //add history item
-  }
+  // Future<void> _generatePDF() async {
+  //   await FileGenerator.generateAndSharePDF(_contentController.text, context);
+  //   //add history item
+  // }
 
-  Future<void> _generatePPTX() async {
-    await FileGenerator.generateAndSharePowerPoint(
-        _contentController.text, context);
-    //add history item
-  }
+  // Future<void> _generateWord() async {
+  //   await FileGenerator.generateAndShareWord(_contentController.text, context);
+  //   //add history item
+  // }
 
-  Future<void> _generateText() async {
-    await FileGenerator.generateAndShareText(_contentController.text, context);
-    //add history item
-  }
+  // Future<void> _generateXlsx() async {
+  //   await FileGenerator.generateAndShareExcel(_contentController.text, context);
+  //   //add history item
+  // }
+
+  // Future<void> _generatePPTX() async {
+  //   await FileGenerator.generateAndSharePowerPoint(
+  //       _contentController.text, context);
+  //   //add history item
+  // }
+
+  // Future<void> _generateText() async {
+  //   await FileGenerator.generateAndShareText(_contentController.text, context);
+  //   //add history item
+  // }
 
   Future<void> _generatePreviewImage({int? themeIndex}) async {
     setState(() {
@@ -670,9 +867,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildFormatButton(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildFormatButton(IconData icon, String type) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => _previewFile(type),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -686,7 +883,7 @@ class _HomePageState extends State<HomePage> {
             child: Icon(icon, color: Colors.blue[700]),
           ),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          Text(type, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
         ],
       ),
     );
@@ -762,20 +959,18 @@ class _HomePageState extends State<HomePage> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                _buildFormatButton(Icons.description_outlined,
-                                    'Word', _generateWord),
                                 _buildFormatButton(
-                                    Icons.picture_as_pdf_outlined,
-                                    'PDF',
-                                    _generatePDF),
-                                _buildFormatButton(Icons.slideshow_outlined,
-                                    'Slides', _generatePPTX),
-                                _buildFormatButton(Icons.table_chart_outlined,
-                                    'Sheet', _generateXlsx),
-                                _buildFormatButton(Icons.image_outlined,
-                                    'Image', _showImagePreviewDrawer),
-                                _buildFormatButton(Icons.text_fields_outlined,
-                                    'Text', _generateText),
+                                    Icons.description_outlined, 'Word'),
+                                _buildFormatButton(
+                                    Icons.picture_as_pdf_outlined, 'PDF'),
+                                _buildFormatButton(
+                                    Icons.slideshow_outlined, 'Slides'),
+                                _buildFormatButton(
+                                    Icons.table_chart_outlined, 'Sheet'),
+                                _buildFormatButton(
+                                    Icons.image_outlined, 'Image'),
+                                _buildFormatButton(
+                                    Icons.text_fields_outlined, 'Text'),
                               ],
                             ),
                           ],

@@ -187,19 +187,6 @@ class _HistoryPageState extends State<HistoryPage> {
     }
   }
 
-  // Widget _buildPreviewWidget(String type, String content, String filePath) {
-  //   switch (type) {
-  //     case 'Image':
-  //       return Image.file(File(filePath));
-  //     default:
-  //       return Markdown(
-  //         data: content,
-  //         selectable: true,
-  //         padding: const EdgeInsets.all(16),
-  //       );
-  //   }
-  // }
-
   Future<File> _generateImageFile(String filePath) async {
     return File(filePath);
   }
@@ -222,9 +209,7 @@ class _HistoryPageState extends State<HistoryPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('分享失败: $e')),
-        );
+        Fluttertoast.showToast(msg: 'Failed to share file: $e');
       }
     }
   }
