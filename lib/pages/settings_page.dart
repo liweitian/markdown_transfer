@@ -100,11 +100,11 @@ class SettingsPage extends StatelessWidget {
             title: 'Contact Us',
             onTap: () => _launchEmail(context),
           ),
-          _buildSettingItem(
-            icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
-            showDivider: false,
-          ),
+          // _buildSettingItem(
+          //   icon: Icons.privacy_tip_outlined,
+          //   title: 'Privacy Policy',
+          //   showDivider: false,
+          // ),
         ],
       ),
     );

@@ -266,18 +266,20 @@ class _HistoryPageState extends State<HistoryPage> {
     try {
       final directory = await getApplicationDocumentsDirectory();
       File? savedFile;
-      
+
       // 如果本地文件已存在，直接复制
       final existingFile = File(item.localPath);
       if (await existingFile.exists()) {
-        final newPath = '${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}_${item.title}';
+        final newPath =
+            '${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}_${item.title}';
         savedFile = await existingFile.copy(newPath);
       } else {
         // 如果本地文件不存在，重新生成
         switch (item.type) {
           case 'PDF':
             final pdfBytes = await generatePdfBytes(item.rawData);
-            savedFile = File('${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}.pdf');
+            savedFile = File(
+                '${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}.pdf');
             await savedFile.writeAsBytes(pdfBytes);
             break;
           case 'Word':
@@ -290,14 +292,20 @@ class _HistoryPageState extends State<HistoryPage> {
             savedFile = await XlsxUtils.generateXlsxFromMarkdown(item.rawData);
             break;
           case 'Image':
-            if (Platform.isIOS || Platform.isAndroid) {
-              final bytes = await File(item.localPath).readAsBytes();
-              final result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: item.title);
-              return;
+            final bytes = await File(item.localPath).readAsBytes();
+            final result = await ImageGallerySaver.saveImage(bytes,
+                quality: 100, name: item.title);
+            if (result['isSuccess']) {
+              Fluttertoast.showToast(msg: 'Image saved to gallery');
             } else {
-              savedFile = await _generateImageFile(item.rawData);
+              Fluttertoast.showToast(
+                msg: 'Please grant permission to save image',
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.CENTER,
+              );
+              openAppSettings();
             }
-            break;
+            return;
           case 'Text':
             savedFile = await TextUtils.generateTextFromContent(item.rawData);
             break;
@@ -377,49 +385,13 @@ class _HistoryPageState extends State<HistoryPage> {
             if (value == 'share') {
               await _shareFile(item);
             } else if (value == 'save') {
-              try {
-                // 根据平台检查不同的权限
-                bool hasPermission = false;
-                if (Platform.isAndroid) {
-                  // Android 需要存储权限
-                  var status = await Permission.manageExternalStorage.status;
-                  if (!status.isGranted) {
-                    status = await Permission.manageExternalStorage.request();
-                    hasPermission = status.isGranted;
-                  } else {
-                    hasPermission = true;
-                  }
-                } else if (Platform.isIOS) {
-                  // iOS 需要照片权限
-                  var status = await Permission.photos.status;
-                  if (!status.isGranted) {
-                    status = await Permission.photos.request();
-                    hasPermission = status.isGranted;
-                  } else {
-                    hasPermission = true;
-                  }
-                }
-
-                if (!hasPermission) {
-                  if (mounted) {
-                    Fluttertoast.showToast(
-                        msg: "Need permission to save image");
-                  }
-                  return;
-                }
-
-                final file = File(item.localPath);
-                if (await file.exists()) {
-                  final bytes = await file.readAsBytes();
-                  final result = await ImageGallerySaver.saveImage(bytes,
-                      quality: 100, name: item.title);
-                  if (mounted) {
-                    Fluttertoast.showToast(msg: 'Image saved to gallery');
-                  }
-                }
-              } catch (e) {
+              final file = File(item.localPath);
+              if (await file.exists()) {
+                final bytes = await file.readAsBytes();
+                final result = await ImageGallerySaver.saveImage(bytes,
+                    quality: 100, name: item.title);
                 if (mounted) {
-                  Fluttertoast.showToast(msg: 'Save Failed');
+                  Fluttertoast.showToast(msg: 'Image saved to gallery');
                 }
               }
             } else if (value == 'delete') {
@@ -480,7 +452,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   _buildFilterChip('All', 'All'),
                   _buildFilterChip('PDF', 'PDF'),
                   _buildFilterChip('Word', 'Word'),
-                  _buildFilterChip('Slides', 'Slides'),
+                  // _buildFilterChip('Slides', 'Slides'),
                   _buildFilterChip('Sheet', 'Sheet'),
                   _buildFilterChip('Image', 'Image'),
                   _buildFilterChip('Text', 'Text'),
@@ -489,16 +461,47 @@ class _HistoryPageState extends State<HistoryPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _historyItems.length,
-              itemBuilder: (context, index) {
-                final item = _historyItems[index];
-                if (_selectedType != 'All' && item.type != _selectedType) {
-                  return const SizedBox.shrink();
-                }
-                return _buildHistoryItem(context, item);
-              },
-            ),
+            child: _historyItems.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.history_outlined,
+                            size: 80,
+                            color: Colors.blue[300],
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Text(
+                          'No History Records',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: _historyItems.length,
+                    itemBuilder: (context, index) {
+                      final item = _historyItems[index];
+                      if (_selectedType != 'All' &&
+                          item.type != _selectedType) {
+                        return const SizedBox.shrink();
+                      }
+                      return _buildHistoryItem(context, item);
+                    },
+                  ),
           ),
         ],
       ),

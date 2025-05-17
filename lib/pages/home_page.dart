@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -12,14 +10,15 @@ import '../utils/file_generator.dart';
 import 'dart:ui' as ui;
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final TextEditingController contentController;
+  const HomePage({super.key, required this.contentController});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final TextEditingController _contentController = TextEditingController();
+  late TextEditingController _contentController;
   final FocusNode _contentFocusNode = FocusNode();
   int _selectedThemeIndex = 0;
   ui.Image? _previewImage;
@@ -43,6 +42,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _contentController = widget.contentController;
     _contentFocusNode.addListener(() {
       if (!_contentFocusNode.hasFocus) {
         FocusScope.of(context).unfocus();
@@ -52,111 +52,33 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    _contentController.dispose();
     _contentFocusNode.dispose();
     super.dispose();
   }
 
-  Future<bool> requestIOSPhotoLibraryPermission() async {
-    try {
-      // 直接请求权限，这会触发系统弹窗
-      var status = await Permission.photos.request();
-      print("Permission status: $status");
-
-      if (status.isGranted) {
-        return true;
-      } else if (status.isPermanentlyDenied) {
-        // 权限被永久拒绝，需要引导用户到设置中开启
-        if (mounted) {
-          final openSettings = await showDialog<bool>(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Photo Library Permission Required'),
-                content: const Text(
-                    'Please allow access to photo library in settings to save images'),
-                actions: <Widget>[
-                  TextButton(
-                    child: const Text('Cancel'),
-                    onPressed: () {
-                      Navigator.of(context).pop(false);
-                    },
-                  ),
-                  TextButton(
-                    child: const Text('Settings'),
-                    onPressed: () {
-                      Navigator.of(context).pop(true);
-                    },
-                  ),
-                ],
-              );
-            },
-          );
-
-          if (openSettings == true) {
-            await openAppSettings();
-          }
-        }
-      } else {
-        if (mounted) {
-          Fluttertoast.showToast(
-            msg: 'Photo library permission required to save images',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.CENTER,
-          );
-        }
-      }
-      return false;
-    } catch (e) {
-      print("Permission request error: $e");
-      return false;
-    }
-  }
-
-  Future<bool> requestAndroidPhotoLibraryPermission() async {
-    var status = await Permission.manageExternalStorage.request();
-    if (status.isGranted) {
-      return true;
-    } else if (status.isPermanentlyDenied) {
-      // 权限被永久拒绝，需要引导用户到设置中开启
-      openAppSettings();
-    }
-    return false;
-  }
-
   Future<void> _saveFile(File file) async {
     try {
-      final directory = await getApplicationDocumentsDirectory();
-      final fileName = file.path.split('/').last;
-      final savedFile = File(
-          '${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}_$fileName');
-
-      // 复制文件到新位置
-      await file.copy(savedFile.path);
-
-      if (await savedFile.exists()) {
-        if (mounted) {
-          Fluttertoast.showToast(
-            msg: 'File saved successfully',
-            toastLength: Toast.LENGTH_LONG,
-            gravity: ToastGravity.BOTTOM,
-          );
-        }
-      } else {
-        throw Exception('Failed to save file');
-      }
+      await Share.shareXFiles([XFile(file.path)]);
     } catch (e) {
       if (mounted) {
         Fluttertoast.showToast(
           msg: 'Failed to save file: $e',
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
         );
       }
     }
   }
 
   Future<void> _previewFile(String type) async {
+    if (_contentController.text.isEmpty) {
+      Fluttertoast.showToast(
+        msg: 'Please input content',
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.CENTER,
+      );
+      return;
+    }
     if (type == 'Image') {
       _showImagePreviewDrawer();
       return;
@@ -316,32 +238,6 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
-
-  // Future<void> _generatePDF() async {
-  //   await FileGenerator.generateAndSharePDF(_contentController.text, context);
-  //   //add history item
-  // }
-
-  // Future<void> _generateWord() async {
-  //   await FileGenerator.generateAndShareWord(_contentController.text, context);
-  //   //add history item
-  // }
-
-  // Future<void> _generateXlsx() async {
-  //   await FileGenerator.generateAndShareExcel(_contentController.text, context);
-  //   //add history item
-  // }
-
-  // Future<void> _generatePPTX() async {
-  //   await FileGenerator.generateAndSharePowerPoint(
-  //       _contentController.text, context);
-  //   //add history item
-  // }
-
-  // Future<void> _generateText() async {
-  //   await FileGenerator.generateAndShareText(_contentController.text, context);
-  //   //add history item
-  // }
 
   Future<void> _generatePreviewImage({int? themeIndex}) async {
     setState(() {
@@ -512,19 +408,6 @@ class _HomePageState extends State<HomePage> {
                         label: 'Save',
                         onTap: () async {
                           try {
-                            // 检查权限
-                            bool isGranted = false;
-                            if (Platform.isAndroid) {
-                              isGranted =
-                                  await requestAndroidPhotoLibraryPermission();
-                            } else if (Platform.isIOS) {
-                              isGranted =
-                                  await requestIOSPhotoLibraryPermission();
-                            }
-                            if (!isGranted) {
-                              return;
-                            }
-
                             await FileGenerator.generateAndSaveImage(
                               _contentController.text,
                               _selectedThemeIndex,
@@ -963,8 +846,8 @@ class _HomePageState extends State<HomePage> {
                                     Icons.description_outlined, 'Word'),
                                 _buildFormatButton(
                                     Icons.picture_as_pdf_outlined, 'PDF'),
-                                _buildFormatButton(
-                                    Icons.slideshow_outlined, 'Slides'),
+                                // _buildFormatButton(
+                                //     Icons.slideshow_outlined, 'Slides'),
                                 _buildFormatButton(
                                     Icons.table_chart_outlined, 'Sheet'),
                                 _buildFormatButton(

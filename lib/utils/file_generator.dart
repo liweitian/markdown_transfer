@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -25,7 +25,7 @@ class FileGenerator {
 
     try {
       final pdfBytes = await generatePdfBytes(content);
-      final directory = await getApplicationDocumentsDirectory();
+      final directory = await getTemporaryDirectory();
       final now = DateTime.now();
       final fileName =
           '${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}_${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}${now.second.toString().padLeft(2, '0')}.pdf';
@@ -88,7 +88,7 @@ class FileGenerator {
 
       return file;
     } catch (e) {
-      print('Failed to generate Excel document: $e');
+      debugPrint('Failed to generate Excel document: $e');
       _showToast('Failed to generate Excel document: $e');
       return null;
     }
@@ -189,10 +189,15 @@ class FileGenerator {
           type: 'Image',
         );
       } else {
-        _showToast('Save failed');
+        Fluttertoast.showToast(
+          msg: 'Please grant permission to save image',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+        );
+        openAppSettings();
       }
     } catch (e) {
-      print('Failed to generate image: $e');
+      debugPrint('Failed to generate image: $e');
       _showToast('Failed to generate image: $e');
     } finally {
       onLoadingChanged(false);

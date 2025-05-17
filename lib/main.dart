@@ -3,6 +3,7 @@ import 'pages/home_page.dart';
 import 'pages/history_page.dart';
 import 'pages/settings_page.dart';
 import 'common/oss.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 void main() {
   Oss.initOSS();
@@ -21,6 +22,10 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        child = EasyLoading.init()(context, child);
+        return child;
+      },
       home: const MainScreen(),
     );
   }
@@ -35,12 +40,18 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  final TextEditingController _contentController = TextEditingController();
+  late final List<Widget> _pages;
 
-  final List<Widget> _pages = [
-    const HomePage(),
-    const HistoryPage(),
-    const SettingsPage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      HomePage(contentController: _contentController),
+      const HistoryPage(),
+      const SettingsPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

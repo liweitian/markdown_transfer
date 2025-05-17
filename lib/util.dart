@@ -495,10 +495,7 @@ Future<Uint8List> generatePdfBytes(String markdownText) async {
     ),
   );
 
-  // 保存PDF
-  print('开始保存PDF');
   final Uint8List pdfBytes = await pdf.save();
-  print('PDF保存成功');
 
   return pdfBytes;
 }
