@@ -45,7 +45,6 @@ class FileGenerator {
         );
       }
     } catch (e) {
-      print('Failed to generate PDF: $e');
       _showToast('Failed to generate PDF: $e');
     }
   }
@@ -73,7 +72,6 @@ class FileGenerator {
         );
       }
     } catch (e) {
-      print('Failed to generate Word document: $e');
       _showToast('Failed to generate Word document: $e');
     }
   }

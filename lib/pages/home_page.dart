@@ -54,7 +54,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<bool> requestIOSPhotoLibraryPermission() async {
-    print("requestIOSPhotoLibraryPermission");
     try {
       // 直接请求权限，这会触发系统弹窗
       var status = await Permission.photos.request();
@@ -70,7 +69,8 @@ class _HomePageState extends State<HomePage> {
             builder: (BuildContext context) {
               return AlertDialog(
                 title: const Text('Photo Library Permission Required'),
-                content: const Text('Please allow access to photo library in settings to save images'),
+                content: const Text(
+                    'Please allow access to photo library in settings to save images'),
                 actions: <Widget>[
                   TextButton(
                     child: const Text('Cancel'),
@@ -127,22 +127,23 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _generateWord() async {
     await FileGenerator.generateAndShareWord(_contentController.text, context);
-     //add history item
+    //add history item
   }
 
   Future<void> _generateXlsx() async {
     await FileGenerator.generateAndShareExcel(_contentController.text, context);
-     //add history item
+    //add history item
   }
 
   Future<void> _generatePPTX() async {
-    await FileGenerator.generateAndSharePowerPoint(_contentController.text, context);
-     //add history item
+    await FileGenerator.generateAndSharePowerPoint(
+        _contentController.text, context);
+    //add history item
   }
 
   Future<void> _generateText() async {
     await FileGenerator.generateAndShareText(_contentController.text, context);
-     //add history item
+    //add history item
   }
 
   Future<void> _generatePreviewImage({int? themeIndex}) async {
@@ -340,7 +341,6 @@ class _HomePageState extends State<HomePage> {
                               },
                             );
                           } catch (e) {
-                            print('Save failed: $e');
                             Fluttertoast.showToast(
                               msg: 'Save failed: $e',
                               toastLength: Toast.LENGTH_SHORT,
@@ -672,24 +672,24 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildFormatButton(IconData icon, String label, VoidCallback onTap) {
     return GestureDetector(
-        onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: Colors.blue[700]),
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
             ),
-            const SizedBox(height: 4),
-            Text(label,
-                style: TextStyle(fontSize: 12, color: Colors.grey[700])),
-          ],
-        ));
+            child: Icon(icon, color: Colors.blue[700]),
+          ),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+        ],
+      ),
+    );
   }
 
   @override

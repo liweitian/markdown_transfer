@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
@@ -67,37 +68,137 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
       );
     } else {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => Scaffold(
-            appBar: AppBar(
-              title: Text(item.title),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  onPressed: () => _shareFile(item),
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        builder: (context) {
+          return SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Text(
+                        item.title,
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    margin: const EdgeInsets.all(16),
+                    child: Markdown(
+                      data: item.rawData,
+                      selectable: true,
+                      padding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 46,
+                            child: ElevatedButton.icon(
+                              onPressed: () async {
+                                await _saveFile(item);
+                                Navigator.pop(context);
+                              },
+                              icon: const Icon(Icons.save_rounded, size: 20),
+                              label: const Text(
+                                'Save',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            height: 46,
+                            child: ElevatedButton.icon(
+                              onPressed: () => _shareFile(item),
+                              icon: const Icon(Icons.share_rounded, size: 20),
+                              label: const Text(
+                                'Share',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey[100],
+                                foregroundColor: Colors.black87,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(
+                                    color: Colors.grey.withOpacity(0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-            body: _buildPreviewWidget(item.type, item.rawData, item.localPath),
-          ),
-        ),
+          );
+        },
       );
     }
   }
 
-  Widget _buildPreviewWidget(String type, String content, String filePath) {
-    switch (type) {
-      case 'Image':
-        return Image.file(File(filePath));
-      default:
-        return Markdown(
-          data: content,
-          selectable: true,
-          padding: const EdgeInsets.all(16),
-        );
-    }
-  }
+  // Widget _buildPreviewWidget(String type, String content, String filePath) {
+  //   switch (type) {
+  //     case 'Image':
+  //       return Image.file(File(filePath));
+  //     default:
+  //       return Markdown(
+  //         data: content,
+  //         selectable: true,
+  //         padding: const EdgeInsets.all(16),
+  //       );
+  //   }
+  // }
 
   Future<File> _generateImageFile(String filePath) async {
     return File(filePath);
@@ -167,13 +268,67 @@ class _HistoryPageState extends State<HistoryPage> {
           text: item.title,
         );
       } else {
-        throw Exception('文件生成失败');
+        throw Exception('Failed to generate file');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('生成文件失败: $e')),
-        );
+        Fluttertoast.showToast(msg: 'Failed to generate file: $e');
+      }
+    }
+  }
+
+  Future<void> _saveFile(HistoryItem item) async {
+    try {
+      final directory = await getApplicationDocumentsDirectory();
+      File? savedFile;
+      
+      // 如果本地文件已存在，直接复制
+      final existingFile = File(item.localPath);
+      if (await existingFile.exists()) {
+        final newPath = '${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}_${item.title}';
+        savedFile = await existingFile.copy(newPath);
+      } else {
+        // 如果本地文件不存在，重新生成
+        switch (item.type) {
+          case 'PDF':
+            final pdfBytes = await generatePdfBytes(item.rawData);
+            savedFile = File('${directory.path}/saved_${DateTime.now().millisecondsSinceEpoch}.pdf');
+            await savedFile.writeAsBytes(pdfBytes);
+            break;
+          case 'Word':
+            savedFile = await WordUtils.generateWordFromMarkdown(item.rawData);
+            break;
+          case 'Slides':
+            savedFile = await PPTXUtils.generatePPTXFromMarkdown(item.rawData);
+            break;
+          case 'Sheet':
+            savedFile = await XlsxUtils.generateXlsxFromMarkdown(item.rawData);
+            break;
+          case 'Image':
+            if (Platform.isIOS || Platform.isAndroid) {
+              final bytes = await File(item.localPath).readAsBytes();
+              final result = await ImageGallerySaver.saveImage(bytes, quality: 100, name: item.title);
+              return;
+            } else {
+              savedFile = await _generateImageFile(item.rawData);
+            }
+            break;
+          case 'Text':
+            savedFile = await TextUtils.generateTextFromContent(item.rawData);
+            break;
+          default:
+            throw Exception('Unsupported file type: ${item.type}');
+        }
+      }
+
+      if (savedFile != null && await savedFile.exists()) {
+        if (mounted) {
+          Fluttertoast.showToast(msg: 'File saved to: ${savedFile.path}');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        Fluttertoast.showToast(msg: 'Failed to save file: $e');
       }
     }
   }
@@ -218,7 +373,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       color: Colors.blue,
                       size: 20),
                   const SizedBox(width: 12),
-                  Text(item.type == 'Image' ? '保存' : '分享'),
+                  Text(item.type == 'Image' ? 'Save' : 'Share'),
                 ],
               ),
             ),
@@ -228,7 +383,7 @@ class _HistoryPageState extends State<HistoryPage> {
                 children: [
                   Icon(Icons.delete_outline, color: Colors.red, size: 20),
                   SizedBox(width: 12),
-                  Text('删除', style: TextStyle(color: Colors.red)),
+                  Text('Delete', style: TextStyle(color: Colors.red)),
                 ],
               ),
             ),
@@ -262,9 +417,8 @@ class _HistoryPageState extends State<HistoryPage> {
 
                 if (!hasPermission) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('需要相册权限才能保存图片')),
-                    );
+                    Fluttertoast.showToast(
+                        msg: "Need permission to save image");
                   }
                   return;
                 }
@@ -275,36 +429,32 @@ class _HistoryPageState extends State<HistoryPage> {
                   final result = await ImageGallerySaver.saveImage(bytes,
                       quality: 100, name: item.title);
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('图片已保存到相册')),
-                    );
+                    Fluttertoast.showToast(msg: 'Image saved to gallery');
                   }
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('保存失败: $e')),
-                  );
+                  Fluttertoast.showToast(msg: 'Save Failed');
                 }
               }
             } else if (value == 'delete') {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('确认删除'),
-                  content: const Text('确定要删除这条记录吗？'),
+                  title: const Text('Confirm delete'),
+                  content: const Text('Confirm to delete this record?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('取消'),
+                      child: const Text('Cancel'),
                     ),
                     TextButton(
                       onPressed: () {
                         Navigator.pop(context);
                         _deleteHistoryItem(item);
                       },
-                      child:
-                          const Text('删除', style: TextStyle(color: Colors.red)),
+                      child: const Text('Delete',
+                          style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
