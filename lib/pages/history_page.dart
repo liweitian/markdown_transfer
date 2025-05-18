@@ -200,10 +200,7 @@ class _HistoryPageState extends State<HistoryPage> {
     try {
       final file = File(item.localPath);
       if (await file.exists()) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
-          text: item.title,
-        );
+        await Share.shareXFiles([XFile(file.path)]);
       } else {
         await _generateAndShareFile(item);
       }
@@ -250,7 +247,7 @@ class _HistoryPageState extends State<HistoryPage> {
       if (generatedFile != null && await generatedFile.exists()) {
         await Share.shareXFiles(
           [XFile(generatedFile.path)],
-          text: item.title,
+          // text: item.title,
         );
       } else {
         throw Exception('Failed to generate file');

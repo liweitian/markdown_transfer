@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:dio/dio.dart';
 import '../common/oss.dart';
-import 'common_utils.dart';
 
 class WordUtils {
   static final Dio _dio = Dio();
